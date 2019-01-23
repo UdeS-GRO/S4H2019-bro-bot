@@ -19,6 +19,7 @@
 /* Modifications copyright (C) 2019 Étienne Villemure*/
 
 #include <DynamixelWorkbench.h>
+#include <p_monitor.h>
 
 #if defined(__OPENCM904__)
   #define DEVICE_NAME "3" //Dynamixel on Serial3(USART3)  <-OpenCM 485EXP
