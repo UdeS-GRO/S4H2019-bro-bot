@@ -55,7 +55,7 @@ void dynamixel_command(String cmd[])
   {
     if (cmd[0] == "help")
     {
-      //printInst();
+      printInst();
     }
     else if (cmd[0] == "begin")
     {
@@ -645,35 +645,35 @@ bool isAvailableID(uint8_t id)
 
 void printInst(void)
 {
-//  Serial.print("-------------------------------------\n");
-//  Serial.print("Set begin before scan or ping\n");
-//  Serial.print("-------------------------------------\n");
-//  Serial.print("help\n");
-//  Serial.print("begin  (BAUD)\n");
-//  Serial.print("scan   (RANGE)\n");
-//  Serial.print("ping   (ID)\n");
-//  Serial.print("control_table (ID)\n");
-//  Serial.print("id     (ID) (NEW_ID)\n");
-//  Serial.print("baud   (ID) (NEW_BAUD)\n");
-//  Serial.print("torque_on (ID)\n");
-//  Serial.print("torque_off (ID)\n");
-//  Serial.print("joint  (ID) (GOAL_POSITION)\n");
-//  Serial.print("wheel  (ID) (GOAL_VELOCITY)\n");
-//  Serial.print("write  (ID) (ADDRESS_NAME) (DATA)\n");
-//  Serial.print("read   (ID) (ADDRESS_NAME)\n");
-//  Serial.print("sync_write_handler (Ref_ID) (ADDRESS_NAME)\n");
-//  Serial.print("sync_write (ID_1) (ID_2) (HANDLER_INDEX) (PARAM_1) (PARAM_2)\n");
-//  Serial.print("sync_read_handler (Ref_ID) (ADDRESS_NAME)\n");
-//  Serial.print("sync_read (ID_1) (ID_2) (HANDLER_INDEX)\n");
-//  Serial.print("bulk_write_handler\n");
-//  Serial.print("bulk_write_param (ID) (ADDRESS_NAME) (PARAM)\n");
-//  Serial.print("bulk_write\n");
-//  Serial.print("bulk_read_handler\n");
-//  Serial.print("bulk_read_param (ID) (ADDRESS_NAME)\n");
-//  Serial.print("bulk_read\n");
-//  Serial.print("reboot (ID) \n");
-//  Serial.print("reset  (ID) \n");
-//  Serial.print("end\n");
-//  Serial.print("-------------------------------------\n");
-//  Serial.print("Press Enter Key\n");
+  Serial.print("-------------------------------------\n");
+  Serial.print("Set begin before scan or ping\n");
+  Serial.print("-------------------------------------\n");
+  Serial.print("help\n");
+  Serial.print("begin  (BAUD)\n");
+  Serial.print("scan   (RANGE)\n");
+  Serial.print("ping   (ID)\n");
+  Serial.print("control_table (ID)\n");
+  Serial.print("id     (ID) (NEW_ID)\n");
+  Serial.print("baud   (ID) (NEW_BAUD)\n");
+  Serial.print("torque_on (ID)\n");
+  Serial.print("torque_off (ID)\n");
+  Serial.print("joint  (ID) (GOAL_POSITION)\n");
+  Serial.print("wheel  (ID) (GOAL_VELOCITY)\n");
+  Serial.print("write  (ID) (ADDRESS_NAME) (DATA)\n");
+  Serial.print("read   (ID) (ADDRESS_NAME)\n");
+  Serial.print("sync_write_handler (Ref_ID) (ADDRESS_NAME)\n");
+  Serial.print("sync_write (ID_1) (ID_2) (HANDLER_INDEX) (PARAM_1) (PARAM_2)\n");
+  Serial.print("sync_read_handler (Ref_ID) (ADDRESS_NAME)\n");
+  Serial.print("sync_read (ID_1) (ID_2) (HANDLER_INDEX)\n");
+  Serial.print("bulk_write_handler\n");
+  Serial.print("bulk_write_param (ID) (ADDRESS_NAME) (PARAM)\n");
+  Serial.print("bulk_write\n");
+  Serial.print("bulk_read_handler\n");
+  Serial.print("bulk_read_param (ID) (ADDRESS_NAME)\n");
+  Serial.print("bulk_read\n");
+  Serial.print("reboot (ID) \n");
+  Serial.print("reset  (ID) \n");
+  Serial.print("end\n");
+  Serial.print("-------------------------------------\n");
+  Serial.print("Press Enter Key\n");
 }
