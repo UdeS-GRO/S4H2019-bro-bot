@@ -1,4 +1,9 @@
-
+ /* 
+  * Copyright 2019 Étienne Villemure
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 #include <DynamixelWorkbench.h>
 #include "p_monitor.h"
 
@@ -14,7 +19,7 @@ bool verbose_mode;       // Print additionnal data to serial
 void setup()
 {
     // Initialisation
-    Serial.begin(9600);
+    Serial.begin(115200);
     while(!Serial);     // Wait until the serial is ready
     
     cmd[0]="help";
