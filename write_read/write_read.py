@@ -14,20 +14,12 @@ def write():
         cmd = input("Veuillez entrer votre commande (help pour liste de commande): ")
         
         cmd = int(cmd)
-        if cmd == 1:
-            send(cmd)
-            break
-        else:
-            send(cmd)
-            
-            
+		send(cmd)
             
 def read():
     while 1:
         cmd_read = ser_read.readline()
         print(cmd_read)
-        if cmd_read == "break":
-            break
         
 t1_write = Thread(target = write)
 t2_read = Thread(target = read)
