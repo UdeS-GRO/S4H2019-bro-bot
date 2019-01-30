@@ -14,7 +14,7 @@ def write():
         cmd = input("Veuillez entrer votre commande (help pour liste de commande): ")
         
         cmd = int(cmd)
-		send(cmd)
+        send(cmd)
             
 def read():
     while 1:
