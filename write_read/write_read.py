@@ -11,9 +11,8 @@ def write():
             ser_write.write(cmd_write)
             print(cmd_write)
 
-        cmd = input("Veuillez entrer votre commande (help pour liste de commande): ")
+        cmd = raw_input("Veuillez entrer votre commande (help pour liste de commande): ")
         
-        cmd = int(cmd)
         send(cmd)
             
 def read():
