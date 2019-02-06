@@ -50,7 +50,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] -= 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur1[0])
+            cmd = "joint 2 " + str(listeMoteur2[0])
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -65,7 +65,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] -= 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur1[0])
+            cmd = "joint 3 " + str(listeMoteur3[0])
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -95,7 +95,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] += 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur1[0])
+            cmd = "joint 2 " + str(listeMoteur2[0])
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -110,7 +110,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] += 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur1[0])
+            cmd = "joint 3 " + str(listeMoteur3[0])
             print(cmd)
             send(cmd)
         elif autoState == 0:
