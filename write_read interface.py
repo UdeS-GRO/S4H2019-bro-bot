@@ -12,9 +12,9 @@ from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar
 ser_write = serial.Serial("/dev/ttyACM0",115200)
 ser_read = serial.Serial("/dev/ttyACM0",115200)
 
-angle1 = 0.0
-angle2 = 0.0
-angle3 = 0.0
+angle1 = 0
+angle2 = 0
+angle3 = 0
 
 listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
@@ -35,7 +35,7 @@ def write():
             moteur1Entry.insert(0,listeMoteur1[0])
             cmd = "joint 1 " + str(listeMoteur1[0])
             print(cmd)
-#            send()
+            send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
             listeMoteur1[0] -= 1
@@ -78,7 +78,7 @@ def write():
             listeMoteur1[0] += 1
             moteur1Entry.insert(0,listeMoteur1[0])
             cmd = "joint 1 " + str(listeMoteur1[0])
-#            send()
+            send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
             listeMoteur1[0] += 1
@@ -117,9 +117,9 @@ def write():
     
     def sendAngle(event):
         try:
-            valueM1 = float(moteur1Entry.get())
-            valueM2 = float(moteur2Entry.get())
-            valueM3 = float(moteur3Entry.get())
+            valueM1 = int(moteur1Entry.get())
+            valueM2 = int(moteur2Entry.get())
+            valueM3 = int(moteur3Entry.get())
         except ValueError:
             valueM1 = 0
             valueM2 = 0
@@ -133,17 +133,19 @@ def write():
         cmd2 = "joint 2" + str(listeMoteur2[0])
         cmd3 = "joint 3" + str(listeMoteur3[0])
         
+        send(cmd1)
+        
         
     def reset(event):
-        listeMoteur1[0] = 0.0
-        listeMoteur2[0] = 0.0
-        listeMoteur3[0] = 0.0
+        listeMoteur1[0] = 0
+        listeMoteur2[0] = 0
+        listeMoteur3[0] = 0
         moteur1Entry.delete(0,10)
         moteur2Entry.delete(0,10)
         moteur3Entry.delete(0,10)
-        moteur1Entry.insert(0,0.0)
-        moteur2Entry.insert(0,0.0)
-        moteur3Entry.insert(0,0.0)
+        moteur1Entry.insert(0,0)
+        moteur2Entry.insert(0,0)
+        moteur3Entry.insert(0,0)
 
     #-------------moteur 1-------------
     Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
