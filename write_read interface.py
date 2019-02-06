@@ -6,12 +6,11 @@
 """
 
 from threading import Thread
-#import serial
+import serial
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar
 
-
-#ser_write = serial.Serial("/dev/ttyACM0",115200)
-#ser_read = serial.Serial("/dev/ttyACM0",115200)
+ser_write = serial.Serial("/dev/ttyACM0",115200)
+ser_read = serial.Serial("/dev/ttyACM0",115200)
 
 angle1 = 0.0
 angle2 = 0.0
@@ -20,6 +19,7 @@ angle3 = 0.0
 listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
 listeMoteur3 = [angle3]
+
 
 def write():      
         
@@ -33,6 +33,8 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] -= 1
             moteur1Entry.insert(0,listeMoteur1[0])
+            cmd = "joint 1 " + str(listeMoteur1[0])
+            print(cmd)
 #            send()
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -47,6 +49,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] -= 1
             moteur2Entry.insert(0,listeMoteur2[0])
+            cmd = "joint 2 " + str(listeMoteur1[0])
 #            send()
         elif autoState == 0:
             moteur2Entry.delete(0,10)
@@ -60,6 +63,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] -= 1
             moteur3Entry.insert(0,listeMoteur3[0])
+            cmd = "joint 3 " + str(listeMoteur1[0])
 #            send()
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -73,6 +77,7 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] += 1
             moteur1Entry.insert(0,listeMoteur1[0])
+            cmd = "joint 1 " + str(listeMoteur1[0])
 #            send()
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -86,7 +91,8 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] += 1
             moteur2Entry.insert(0,listeMoteur2[0])
-#            send()
+            cmd = "joint 2 " + str(listeMoteur1[0])
+#            send(cmd)
         elif autoState == 0:
             moteur2Entry.delete(0,10)
             listeMoteur2[0] += 1
@@ -99,6 +105,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] += 1
             moteur3Entry.insert(0,listeMoteur3[0])
+            cmd = "joint 3 " + str(listeMoteur1[0])
 #            send()
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -121,6 +128,10 @@ def write():
         listeMoteur1[0] = valueM1
         listeMoteur2[0] = valueM2
         listeMoteur3[0] = valueM3
+        
+        cmd1 = "joint 1" + str(listeMoteur1[0])
+        cmd2 = "joint 2" + str(listeMoteur2[0])
+        cmd3 = "joint 3" + str(listeMoteur3[0])
         
         
     def reset(event):
@@ -204,9 +215,8 @@ def write():
 
 def read():
     while 1:
-        pass
-#        cmd_read = ser_read.readline()
-#        print(cmd_read.decode('utf-8'))
+        cmd_read = ser_read.readline()
+        print(cmd_read.decode('utf-8'))
         
 def send(cmd_write):
         ser_write.write(cmd_write.encode())
