@@ -5,10 +5,11 @@
  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
-from tkinter import Tk, Button, Label, Entry, W, E
-angle1 = 0
-angle2 = 0
-angle3 = 0
+from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar
+
+angle1 = 0.0
+angle2 = 0.0
+angle3 = 0.0
 
 listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
@@ -20,7 +21,6 @@ def leftKeyM1(event):
     listeMoteur1[0] -= 1
     moteur1Entry.insert(0,listeMoteur1[0])
 
-    print("Left key M1 pressed")
     
 def leftKeyM2(event):
 
@@ -28,7 +28,6 @@ def leftKeyM2(event):
     listeMoteur2[0] -= 1
     moteur2Entry.insert(0,listeMoteur2[0])
 
-    print("Left key M2 pressed")
     
 def leftKeyM3(event):
 
@@ -36,7 +35,6 @@ def leftKeyM3(event):
     listeMoteur3[0] -= 1
     moteur3Entry.insert(0,listeMoteur3[0])
 
-    print("Left key M3 pressed")
 
 def rightKeyM1(event):
     
@@ -44,7 +42,6 @@ def rightKeyM1(event):
     listeMoteur1[0] += 1
     moteur1Entry.insert(0,listeMoteur1[0])
     
-    print("Right key M1 pressed")
     
 def rightKeyM2(event):
     
@@ -52,7 +49,6 @@ def rightKeyM2(event):
     listeMoteur2[0] += 1
     moteur2Entry.insert(0,listeMoteur2[0])
     
-    print("Right key M2 pressed")
     
 def rightKeyM3(event):
     
@@ -60,17 +56,41 @@ def rightKeyM3(event):
     listeMoteur3[0] += 1
     moteur3Entry.insert(0,listeMoteur3[0])
     
-    print("Right key M3 pressed")
+
+def automatic():
+    if automaticChoice.get() == 1:
+        print("mode automatique activé")
+    elif automaticChoice.get() == 0:
+        print("mode automatque désactivé")
+    else:
+        pass
+
+def send(event):
+    try:
+        valueM1 = float(moteur1Entry.get())
+        valueM2 = float(moteur2Entry.get())
+        valueM3 = float(moteur3Entry.get())
+    except ValueError:
+        valueM1 = 0
+        valueM2 = 0
+        valueM3 = 0
+    
+    listeMoteur1[0] = valueM1
+    listeMoteur2[0] = valueM2
+    listeMoteur3[0] = valueM3
+   
     
 def reset(event):
-    angle = 0
+    listeMoteur1[0] = 0.0
+    listeMoteur2[0] = 0.0
+    listeMoteur3[0] = 0.0
     moteur1Entry.delete(0,10)
     moteur2Entry.delete(0,10)
     moteur3Entry.delete(0,10)
-    moteur1Entry.insert(0,angle)
-    moteur2Entry.insert(0,angle)
-    moteur3Entry.insert(0,angle)
-    
+    moteur1Entry.insert(0,0.0)
+    moteur2Entry.insert(0,0.0)
+    moteur3Entry.insert(0,0.0)
+
 root = Tk()
 
 #-------------moteur 1-------------
@@ -118,30 +138,27 @@ right3Button.grid(row=2, column = 2, sticky = E, padx=4,pady=4)
 moteur3Entry = Entry(root)
 moteur3Entry.grid(row=2,column=3,sticky=E, padx=4,pady=4)
 
-#-------------Radio button moteur-----
+#-------------Send button-------------
 
-#varChoix = StringVar()
-#choixMoteur1 = Radiobutton(root, text="Moteur 1", variable = varChoix, value = "moteur1", command = choixMoteur)
-#choixMoteur2 = Radiobutton(root, text="Moteur 2", variable = varChoix, value = "moteur2", command = choixMoteur)
-#choixMoteur3 = Radiobutton(root, text="Moteur 3", variable = varChoix, value = "moteur3", command = choixMoteur)
-#
-#choixMoteur1.grid(row=1, column=0, sticky=W, padx=4, pady=4)
-#choixMoteur2.grid(row=2, column=0, sticky=W, padx=4, pady=4)
-#choixMoteur3.grid(row=3, column=0, sticky=W, padx=4, pady=4)
-#
-#moteurChoisi = Label(root)
-#moteurChoisi.grid(row=4, column=3, sticky=E, padx=4, pady=4)
+sendButton = Button(root,text="send")
+sendButton.bind("<Button-1>", send)
+sendButton.grid(row=3,column=3,sticky=W)
+
+#-------------Automatic send----------
+
+automaticChoice = BooleanVar()
+auto = Checkbutton(root,text="automatic send", variable=automaticChoice, command=automatic)
+auto.grid(row=0,column=4, padx=4, pady=4, sticky=W)
 
 #-------------Reset-------------------
 
 resetButton = Button(root,text="reset")
-resetButton.bind("<Button-1>",reset)
+resetButton.bind("<Button-1>", reset)
 resetButton.grid(row=3, column=1, sticky = E)
 
 #-------------Quit button-------------
 bouton = Button(root, text = "close", command=root.quit)
 bouton.grid(row = 3, column = 0)
-
 
 root.mainloop()
 root.destroy()
