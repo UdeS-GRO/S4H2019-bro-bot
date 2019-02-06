@@ -5,7 +5,7 @@
  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
-from tkinter import Tk, Button, Label, Entry, W, E, END
+from tkinter import Tk, Button, Label, Entry, W, E
 angle1 = 0
 angle2 = 0
 angle3 = 0
@@ -14,25 +14,53 @@ listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
 listeMoteur3 = [angle3]
 
-listeButton = []
+def leftKeyM1(event):
 
-def leftKey(event):
-#    btt = event.GetEventObject()
+    moteur1Entry.delete(0,10)
+    listeMoteur1[0] -= 1
+    moteur1Entry.insert(0,listeMoteur1[0])
+
+    print("Left key M1 pressed")
+    
+def leftKeyM2(event):
+
+    moteur2Entry.delete(0,10)
+    listeMoteur2[0] -= 1
+    moteur2Entry.insert(0,listeMoteur2[0])
+
+    print("Left key M2 pressed")
+    
+def leftKeyM3(event):
+
+    moteur3Entry.delete(0,10)
+    listeMoteur3[0] -= 1
+    moteur3Entry.insert(0,listeMoteur3[0])
+
+    print("Left key M3 pressed")
+
+def rightKeyM1(event):
     
     moteur1Entry.delete(0,10)
-    liste[0] -= 1
+    listeMoteur1[0] += 1
+    moteur1Entry.insert(0,listeMoteur1[0])
     
-    moteur1Entry.insert(0,liste[0])
-    print("Left key pressed")
-
-
-def rightKey(event):
-#    btt = event.GetEventObject()
-    moteur1Entry.delete(0,10)
-    liste[0] += 1
+    print("Right key M1 pressed")
     
-    moteur1Entry.insert(0,liste[0])
-    print("Right key pressed")
+def rightKeyM2(event):
+    
+    moteur2Entry.delete(0,10)
+    listeMoteur2[0] += 1
+    moteur2Entry.insert(0,listeMoteur2[0])
+    
+    print("Right key M2 pressed")
+    
+def rightKeyM3(event):
+    
+    moteur3Entry.delete(0,10)
+    listeMoteur3[0] += 1
+    moteur3Entry.insert(0,listeMoteur3[0])
+    
+    print("Right key M3 pressed")
     
 def reset(event):
     angle = 0
@@ -42,7 +70,7 @@ def reset(event):
     moteur1Entry.insert(0,angle)
     moteur2Entry.insert(0,angle)
     moteur3Entry.insert(0,angle)
-
+    
 root = Tk()
 
 #-------------moteur 1-------------
@@ -51,10 +79,10 @@ Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
 left1Button = Button(root,text="<-")
 right1Button = Button(root,text="->")
 
-left1Button.bind('<Button-1>', leftKey)
+left1Button.bind('<Button-1>', leftKeyM1)
 left1Button.grid(row=0, column = 1, sticky = E, padx=4, pady=4)
 
-right1Button.bind('<Button-1>', rightKey)
+right1Button.bind('<Button-1>', rightKeyM1)
 right1Button.grid(row=0, column = 2, sticky = E, padx=4,pady=4)
 
 moteur1Entry = Entry(root)
@@ -66,10 +94,10 @@ Label(root,text = "moteur 2").grid(row=1,sticky=W, padx=4)
 left2Button = Button(root,text="<-")
 right2Button = Button(root,text="->")
 
-left2Button.bind('<Button-2>', leftKey)
+left2Button.bind('<Button-1>', leftKeyM2)
 left2Button.grid(row=1, column = 1, sticky = E, padx=4, pady=4)
 
-right2Button.bind('<Button-2>', rightKey)
+right2Button.bind('<Button-1>', rightKeyM2)
 right2Button.grid(row=1, column = 2, sticky = E, padx=4,pady=4)
 
 moteur2Entry = Entry(root)
@@ -81,21 +109,28 @@ Label(root,text = "moteur 3").grid(row=2,sticky=W, padx=4)
 left3Button = Button(root,text="<-")
 right3Button = Button(root,text="->")
 
-left3Button.bind('<Button-3>', leftKey)
+left3Button.bind('<Button-1>', leftKeyM3)
 left3Button.grid(row=2, column = 1, sticky = E, padx=4,pady=4)
 
-right3Button.bind('<Button-3>', rightKey)
+right3Button.bind('<Button-1>', rightKeyM3)
 right3Button.grid(row=2, column = 2, sticky = E, padx=4,pady=4)
 
 moteur3Entry = Entry(root)
 moteur3Entry.grid(row=2,column=3,sticky=E, padx=4,pady=4)
 
+#-------------Radio button moteur-----
 
-#-------------Liste bouton------------
-
-listeButton = [left1Button,right1Button,
-               left2Button,right2Button,
-               left3Button,right3Button]
+#varChoix = StringVar()
+#choixMoteur1 = Radiobutton(root, text="Moteur 1", variable = varChoix, value = "moteur1", command = choixMoteur)
+#choixMoteur2 = Radiobutton(root, text="Moteur 2", variable = varChoix, value = "moteur2", command = choixMoteur)
+#choixMoteur3 = Radiobutton(root, text="Moteur 3", variable = varChoix, value = "moteur3", command = choixMoteur)
+#
+#choixMoteur1.grid(row=1, column=0, sticky=W, padx=4, pady=4)
+#choixMoteur2.grid(row=2, column=0, sticky=W, padx=4, pady=4)
+#choixMoteur3.grid(row=3, column=0, sticky=W, padx=4, pady=4)
+#
+#moteurChoisi = Label(root)
+#moteurChoisi.grid(row=4, column=3, sticky=E, padx=4, pady=4)
 
 #-------------Reset-------------------
 
