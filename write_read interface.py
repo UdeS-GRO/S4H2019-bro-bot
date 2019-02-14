@@ -8,7 +8,6 @@
 from threading import Thread
 import serial
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar
-import time
 
 ser_write = serial.Serial("/dev/ttyACM0",115200)
 ser_read = serial.Serial("/dev/ttyACM0",115200)
@@ -22,8 +21,8 @@ listeMoteur2 = [angle2]
 listeMoteur3 = [angle3]
 
 def routine():
-    send("joint 1 50/n")
-    send("joint 2 60/n")
+    send("joint 1 50\n")
+    send("joint 2 60\n")
 
 def write():      
 
