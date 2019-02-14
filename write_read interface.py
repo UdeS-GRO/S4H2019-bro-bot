@@ -21,11 +21,11 @@ listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
 listeMoteur3 = [angle3]
 
+def routine():
+    send("joint 1 50/n")
+    send("joint 2 60/n")
 
 def write():      
-        
-#        cmd = input('Veuillez entrer votre commande (help pour liste de commande): ')
-#        send(cmd)
 
     def leftKeyM1(event):
         autoState = automatic()
@@ -34,7 +34,7 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] -= 10
             moteur1Entry.insert(0,listeMoteur1[0])
-            cmd = "joint 1 " + str(listeMoteur1[0])
+            cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -50,7 +50,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] -= 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur2[0])
+            cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -65,7 +65,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] -= 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur3[0])
+            cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -80,7 +80,7 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] += 10
             moteur1Entry.insert(0,listeMoteur1[0])
-            cmd = "joint 1 " + str(listeMoteur1[0])
+            cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -95,7 +95,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] += 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur2[0])
+            cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -110,7 +110,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] += 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur3[0])
+            cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
             print(cmd)
             send(cmd)
         elif autoState == 0:
@@ -135,14 +135,12 @@ def write():
         listeMoteur2[0] = valueM2
         listeMoteur3[0] = valueM3
         
-        cmd1 = "joint 1" + str(listeMoteur1[0])
-        cmd2 = "joint 2" + str(listeMoteur2[0])
-        cmd3 = "joint 3" + str(listeMoteur3[0])
+        cmd1 = "joint 1 " + str(listeMoteur1[0]) + "\n"
+        cmd2 = "joint 2 " + str(listeMoteur2[0]) + "\n"
+        cmd3 = "joint 3 " + str(listeMoteur3[0]) + "\n"
         
         send(cmd1)
-        time.sleep(3)
         send(cmd2)
-        time.sleep(3)
         send(cmd3)
         
         
@@ -231,8 +229,8 @@ def read():
         print(cmd_read.decode('utf-8'))
         
 def send(cmd_write):
-        ser_write.write(cmd_write.encode())
-        print(cmd_write)
+    ser_write.write(cmd_write.encode())
+    print(cmd_write)
         
 
 
@@ -243,6 +241,8 @@ t2_read = Thread(target = read)
 
 t1_write.start()
 t2_read.start()
+
+routine()
 
 root.mainloop()
 root.destroy()
