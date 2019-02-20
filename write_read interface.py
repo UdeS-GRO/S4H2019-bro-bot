@@ -38,7 +38,6 @@ def write():
             listeMoteur1[0] -= 10
             moteur1Entry.insert(0,listeMoteur1[0])
             cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -54,7 +53,6 @@ def write():
             listeMoteur2[0] -= 10
             moteur2Entry.insert(0,listeMoteur2[0])
             cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur2Entry.delete(0,10)
@@ -69,7 +67,6 @@ def write():
             listeMoteur3[0] -= 10
             moteur3Entry.insert(0,listeMoteur3[0])
             cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -84,7 +81,6 @@ def write():
             listeMoteur1[0] += 10
             moteur1Entry.insert(0,listeMoteur1[0])
             cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -99,7 +95,6 @@ def write():
             listeMoteur2[0] += 10
             moteur2Entry.insert(0,listeMoteur2[0])
             cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur2Entry.delete(0,10)
@@ -114,7 +109,6 @@ def write():
             listeMoteur3[0] += 10
             moteur3Entry.insert(0,listeMoteur3[0])
             cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
-            print(cmd)
             send(cmd)
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -146,6 +140,9 @@ def write():
         send(cmd2)
         send(cmd3)
         
+        instructionListe.append(" " + cmd1)
+        instructionListe.append(" " + cmd2)
+        instructionListe.append(" " + cmd3)
         
     def reset(event):
         listeMoteur1[0] = 0
@@ -163,33 +160,37 @@ def write():
         global command
         global execute
         
-        if command == 1:
+        if not instructionListe:
             pass
         else:
-            x = routine.search("x","1.0",stopindex=END)
-            command -= 1
-            routine.delete(x)
-            routine.insert(float(command),"x")
-            x = routine.search("x",str(float(command)),stopindex=END)
-            execute = instructionListe[int(float(x))-1]
-            print(execute)        
-        
+            if command == 1:
+                pass
+            else:
+                x = routine.search("x","1.0",stopindex=END)
+                command -= 1
+                routine.delete(x)
+                routine.insert(float(command),"x")
+                x = routine.search("x",str(float(command)),stopindex=END)
+                execute = instructionListe[int(float(x))-1]
+                
 
     def down(event):
         
         global command
         global execute
         
-        if command == len(instructionListe):
+        if not instructionListe:
             pass
         else:
-            x = routine.search("x","1.0",stopindex=END)
-            command += 1
-            routine.delete(x)
-            routine.insert(float(command),"x")
-            x = routine.search("x",str(float(command)),stopindex=END)
-            execute = instructionListe[int(float(x))-1]
-            print(execute)
+            if command == len(instructionListe):
+                pass
+            else:
+                x = routine.search("x","1.0",stopindex=END)
+                command += 1
+                routine.delete(x)
+                routine.insert(float(command),"x")
+                x = routine.search("x",str(float(command)),stopindex=END)
+                execute = instructionListe[int(float(x))-1]
             
     def add(event):
         
@@ -197,7 +198,6 @@ def write():
         
         x = routine.search("x","1.0", stopindex=END)
         instructionListe.insert(int(float(x)), " " + str(instructEntry.get()))
-        
         routine.delete("1.0",END)
         
         for inst in instructionListe:
@@ -208,27 +208,44 @@ def write():
         
     def delete(event):
         
-        x = routine.search("x","1.0", stopindex=END)
-        instructionListe.pop(int(float(x))-1)
-        
-        routine.delete("1.0",END)
-        
-        for inst in instructionListe:
-            routine.insert(END, inst + "\n")
+        if not instructionListe:
+            pass
+        else:
+            x = routine.search("x","1.0", stopindex=END)
+            instructionListe.pop(int(float(x))-1)
             
-        routine.insert(x,"x")
+            routine.delete("1.0",END)
+            
+            for inst in instructionListe:
+                routine.insert(END, inst + "\n")
+                
+            routine.insert(x,"x")
         
     def replace(event):
+            
+        if not instructionListe:
+            pass
+        else:
+            x = routine.search("x", "1.0", stopindex=END)
+            
+            routine.delete(x,str(float(x)+1))
+            
+            instructionListe[int(float(x))-1] = str(instructEntry.get())
+            routine.insert(x, " " + str(instructEntry.get()) + "\n")
+            
+            routine.insert(x,"x")
+            
+    def play(event):
         
-        x = routine.search("x", "1.0", stopindex=END)
+        x = routine.search("x","1.0", stopindex=END)
         
-        routine.delete(x,str(float(x)+1))
-        
-        instructionListe[int(float(x))-1] = str(instructEntry.get())
-        routine.insert(x, " " + str(instructEntry.get()) + "\n")
-        
-        routine.insert(x,"x")
-
+        for index, inst in enumerate(instructionListe):
+            if index < int(float(x))-1:
+                pass
+            else:
+                execute = inst
+                send(execute)
+            
     #-------------moteur 1-------------
     Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
     
@@ -276,8 +293,8 @@ def write():
     
     #-------------Routine---------------
     
-    routine = Text(root, height = 10, width = 40)
-    routine.place(x = 550, y = 0)
+    routine = Text(root, height = 10, width = 20)
+    routine.place(x = 520, y = 4)
     
     butUp = Button(root, text="UP")
     butUp.bind("<Button-1>", up)
@@ -298,6 +315,14 @@ def write():
     butReplace = Button(root, text = "REPLACE")
     butReplace.bind("<Button-1>", replace)
     butReplace.grid(row=4, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butRun = Button(root, text = "PLAY")
+    butRun.bind("<Button-1>", play)
+    butRun.place(x = 520, y = 170)
+    
+    butExecute = Button(root, text = "EXECUTE")
+    butExecute.bind("<Button-1>", send)
+    butExecute.place(x = 580, y = 170)
     
     instructEntry = Entry(root)
     instructEntry.grid(row=5, column = 5, sticky = E, padx = 4, pady = 4)
@@ -340,11 +365,10 @@ def send(cmd_write):
     pass
 #    ser_write.write(cmd_write.encode())
 #    print(cmd_write)
-        
 
 
 root = Tk()
-root.geometry("700x250")
+root.geometry("750x200")
 
 t1_write = Thread(target = write)
 t2_read = Thread(target = read)
