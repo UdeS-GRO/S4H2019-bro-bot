@@ -6,12 +6,11 @@
 """
 
 from threading import Thread
-import serial
-from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar
-import time
+#import serial
+from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
 
-ser_write = serial.Serial("/dev/ttyACM0",115200)
-ser_read = serial.Serial("/dev/ttyACM0",115200)
+#ser_write = serial.Serial("/dev/ttyACM0",115200)
+#ser_read = serial.Serial("/dev/ttyACM0",115200)
 
 angle1 = 0
 angle2 = 0
@@ -21,11 +20,15 @@ listeMoteur1 = [angle1]
 listeMoteur2 = [angle2]
 listeMoteur3 = [angle3]
 
+instructionListe = []
+command = 1
+execute = ""
+
+def routine():
+    send("joint 1 50\n")
+    send("joint 2 60\n")
 
 def write():      
-        
-#        cmd = input('Veuillez entrer votre commande (help pour liste de commande): ')
-#        send(cmd)
 
     def leftKeyM1(event):
         autoState = automatic()
@@ -34,8 +37,7 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] -= 10
             moteur1Entry.insert(0,listeMoteur1[0])
-            cmd = "joint 1 " + str(listeMoteur1[0])
-            print(cmd)
+            cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -50,8 +52,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] -= 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur2[0])
-            print(cmd)
+            cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur2Entry.delete(0,10)
@@ -65,8 +66,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] -= 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur3[0])
-            print(cmd)
+            cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -80,8 +80,7 @@ def write():
             moteur1Entry.delete(0,10)
             listeMoteur1[0] += 10
             moteur1Entry.insert(0,listeMoteur1[0])
-            cmd = "joint 1 " + str(listeMoteur1[0])
-            print(cmd)
+            cmd = "joint 1 " + str(listeMoteur1[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur1Entry.delete(0,10)
@@ -95,8 +94,7 @@ def write():
             moteur2Entry.delete(0,10)
             listeMoteur2[0] += 10
             moteur2Entry.insert(0,listeMoteur2[0])
-            cmd = "joint 2 " + str(listeMoteur2[0])
-            print(cmd)
+            cmd = "joint 2 " + str(listeMoteur2[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur2Entry.delete(0,10)
@@ -110,8 +108,7 @@ def write():
             moteur3Entry.delete(0,10)
             listeMoteur3[0] += 10
             moteur3Entry.insert(0,listeMoteur3[0])
-            cmd = "joint 3 " + str(listeMoteur3[0])
-            print(cmd)
+            cmd = "joint 3 " + str(listeMoteur3[0]) + "\n"
             send(cmd)
         elif autoState == 0:
             moteur3Entry.delete(0,10)
@@ -135,16 +132,17 @@ def write():
         listeMoteur2[0] = valueM2
         listeMoteur3[0] = valueM3
         
-        cmd1 = "joint 1" + str(listeMoteur1[0])
-        cmd2 = "joint 2" + str(listeMoteur2[0])
-        cmd3 = "joint 3" + str(listeMoteur3[0])
+        cmd1 = "joint 1 " + str(listeMoteur1[0]) + "\n"
+        cmd2 = "joint 2 " + str(listeMoteur2[0]) + "\n"
+        cmd3 = "joint 3 " + str(listeMoteur3[0]) + "\n"
         
         send(cmd1)
-        time.sleep(3)
         send(cmd2)
-        time.sleep(3)
         send(cmd3)
         
+        instructionListe.append(" " + cmd1)
+        instructionListe.append(" " + cmd2)
+        instructionListe.append(" " + cmd3)
         
     def reset(event):
         listeMoteur1[0] = 0
@@ -156,7 +154,98 @@ def write():
         moteur1Entry.insert(0,0)
         moteur2Entry.insert(0,0)
         moteur3Entry.insert(0,0)
+        
+    def up(event):
+        
+        global command
+        global execute
+        
+        if not instructionListe:
+            pass
+        else:
+            if command == 1:
+                pass
+            else:
+                x = routine.search("x","1.0",stopindex=END)
+                command -= 1
+                routine.delete(x)
+                routine.insert(float(command),"x")
+                x = routine.search("x",str(float(command)),stopindex=END)
+                execute = instructionListe[int(float(x))-1]
+                
 
+    def down(event):
+        
+        global command
+        global execute
+        
+        if not instructionListe:
+            pass
+        else:
+            if command == len(instructionListe):
+                pass
+            else:
+                x = routine.search("x","1.0",stopindex=END)
+                command += 1
+                routine.delete(x)
+                routine.insert(float(command),"x")
+                x = routine.search("x",str(float(command)),stopindex=END)
+                execute = instructionListe[int(float(x))-1]
+            
+    def add(event):
+        
+        global command
+        
+        x = routine.search("x","1.0", stopindex=END)
+        instructionListe.insert(int(float(x)), " " + str(instructEntry.get()))
+        routine.delete("1.0",END)
+        
+        for inst in instructionListe:
+            routine.insert(END, inst + "\n")
+            
+        routine.insert(x,"x")
+    
+        
+    def delete(event):
+        
+        if not instructionListe:
+            pass
+        else:
+            x = routine.search("x","1.0", stopindex=END)
+            instructionListe.pop(int(float(x))-1)
+            
+            routine.delete("1.0",END)
+            
+            for inst in instructionListe:
+                routine.insert(END, inst + "\n")
+                
+            routine.insert(x,"x")
+        
+    def replace(event):
+            
+        if not instructionListe:
+            pass
+        else:
+            x = routine.search("x", "1.0", stopindex=END)
+            
+            routine.delete(x,str(float(x)+1))
+            
+            instructionListe[int(float(x))-1] = str(instructEntry.get())
+            routine.insert(x, " " + str(instructEntry.get()) + "\n")
+            
+            routine.insert(x,"x")
+            
+    def play(event):
+        
+        x = routine.search("x","1.0", stopindex=END)
+        
+        for index, inst in enumerate(instructionListe):
+            if index < int(float(x))-1:
+                pass
+            else:
+                execute = inst
+                send(execute)
+            
     #-------------moteur 1-------------
     Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
     
@@ -202,6 +291,47 @@ def write():
     moteur3Entry = Entry(root)
     moteur3Entry.grid(row=2,column=3,sticky=E, padx=4,pady=4)
     
+    #-------------Routine---------------
+    
+    routine = Text(root, height = 10, width = 20)
+    routine.place(x = 520, y = 4)
+    
+    butUp = Button(root, text="UP")
+    butUp.bind("<Button-1>", up)
+    butUp.grid(row=0, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butDown = Button(root, text="DOWN")
+    butDown.bind("<Button-1>", down)
+    butDown.grid(row=1, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butAdd = Button(root, text = "ADD")
+    butAdd.bind("<Button-1>", add)
+    butAdd.grid(row=2, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butDelete = Button(root, text = "DELETE")
+    butDelete.bind("<Button-1>", delete)
+    butDelete.grid(row=3, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butReplace = Button(root, text = "REPLACE")
+    butReplace.bind("<Button-1>", replace)
+    butReplace.grid(row=4, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    butRun = Button(root, text = "PLAY")
+    butRun.bind("<Button-1>", play)
+    butRun.place(x = 520, y = 170)
+    
+    butExecute = Button(root, text = "EXECUTE")
+    butExecute.bind("<Button-1>", send)
+    butExecute.place(x = 580, y = 170)
+    
+    instructEntry = Entry(root)
+    instructEntry.grid(row=5, column = 5, sticky = E, padx = 4, pady = 4)
+    
+    routine.insert(INSERT, "x")
+    
+    for inst in instructionListe:
+        routine.insert(END, inst + "\n")
+    
     #-------------Send button-------------
     
     sendButton = Button(root,text="send")
@@ -226,17 +356,19 @@ def write():
         
 
 def read():
-    while 1:
-        cmd_read = ser_read.readline()
-        print(cmd_read.decode('utf-8'))
+    pass
+#    while 1:
+#        cmd_read = ser_read.readline()
+#        print(cmd_read.decode('utf-8'))
         
 def send(cmd_write):
-        ser_write.write(cmd_write.encode())
-        print(cmd_write)
-        
+    pass
+#    ser_write.write(cmd_write.encode())
+#    print(cmd_write)
 
 
 root = Tk()
+root.geometry("750x200")
 
 t1_write = Thread(target = write)
 t2_read = Thread(target = read)
