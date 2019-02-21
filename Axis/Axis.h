@@ -10,6 +10,7 @@ class Axis
 public:
   Axis(uint8_t ID, uint32_t baud);
   ~Axis();
+  int tews;
 
 	uint8_t ID;
   DynamixelWorkbench dxl;
@@ -36,6 +37,8 @@ private:
   
   float convertValue2Angle(int value);
   int convertAngle2Value(float angle);
+
+
   
 };
 

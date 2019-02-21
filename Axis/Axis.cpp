@@ -120,9 +120,9 @@ int Axis::getCurrent()
 {
 	Sts_ActualCurrent = dxl.convertValue2Current(readRegister("Present_Current"));
 
-	Serial.println("Actual Current is : ",Sts_ActualCurrent, " mA");
-	//Serial.println(Sts_ActualCurrent);
-	//Serial.println(" mA");
+	Serial.println("Actual Current is : ");
+	Serial.println(Sts_ActualCurrent);
+	Serial.println(" mA");
 
 	return Sts_ActualCurrent;
 }
