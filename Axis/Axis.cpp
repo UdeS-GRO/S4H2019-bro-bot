@@ -1,7 +1,8 @@
+t
 /********
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
- * Date: 06 FÃ©vrier 2019 (creation)
+ * Date: 06 Février 2019 (creation)
  * Description: Implementation des methodes des classes decrites dans
  *    forme.h. Les methodes de la classe Forme ne doivent pas etre
  *    modifiees. Ce fichier fait partie de la distribution de Graphicus.
@@ -32,7 +33,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 	else
 	{
 	Serial.print("Succeed to init : ");
-	Serial.println(baud);  
+	Serial.println(baud);
 	}
 
 	// **** Scan du reseau pour lire les moteurs ****
@@ -100,6 +101,87 @@ void Axis::writeRegister(String regName, int32_t value)
 	}
 }
 
+void Axis::Zero()
+{
+    result = dxl.jointMode(ID, 0, 0, &log);
+        if (result == false)
+        {
+          Serial.println(log);
+          return;
+        }
+        else
+        {
+          Serial.println(log);
+        }
+
+        result = dxl.goalPosition(ID, (int32_t)0, &log);
+        if (result == false)
+        {
+          Serial.println(log);
+          return;
+        }
+        else
+        {
+          Serial.println(log);
+        }
+}
+
+void Axis::moveTo(String cmd)
+{
+    uint16_t position = cmd.toInt();
+    result = dxl.jointMode(ID, 0, 0, &log);
+        if (result == false)
+        {
+          Serial.println(log);
+          return;
+        }
+        else
+        {
+          Serial.println(log);
+        }
+
+        result = dxl.goalPosition(ID, (int32_t)position, &log);
+        if (result == false)
+        {
+          Serial.println(log);
+          return;
+        }
+        else
+        {
+          Serial.println(log);
+        }
+}
+
+
+void Axis::moveAtSpeed(String cmd)
+{
+
+    int32_t vitesse  = cmd.toInt();
+
+    result = dxl.wheelMode(ID, 0, &log);
+    if (result == false)
+    {
+        Serial.println(log);
+        return;
+    }
+    else
+    {
+        Serial.println(log);
+    }
+
+    result = dxl.goalVelocity(ID, (int32_t)vitesse, &log);
+    if (result == false)
+    {
+        Serial.println(log);
+        return;
+    }
+    else
+    {
+        Serial.println(log);
+    }
+}
+
+
 int Axis::getPosition()
 {
 	Sts_ActualPosition = convertValue2Angle(readRegister("Present_Position"));
@@ -161,17 +243,17 @@ int Axis::getMovingStatus()
 	{
 		Serial.println("Motor is stopped");
 	}
-	
+
 
 	return Sts_Moving;
 }
 
 float Axis::convertValue2Angle(int value)
-{ 
-    return (value*360/4095); 
+{
+    return (value*360/4095);
 }
 
 int Axis::convertAngle2Value(float angle)
-{ 
-    return (angle*4095/360); 
+{
+    return (angle*4095/360);
 }

@@ -14,7 +14,11 @@ void setup()
     // Initialisation
     Serial.begin(57600);
     while(!Serial);     // Wait until the serial is ready
-    cmd[0] = "help";
+    cmd[0] = "begin";
+    cmd[1] = "57600";
+    dynamixel_command(cmd);
+    cmd[0] = "scan";
+    cmd[1] = "6";
     dynamixel_command(cmd);
 }
 
