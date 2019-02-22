@@ -1,5 +1,12 @@
 # bro-bot
-
+ __                             __              __      
+/\ \                           /\ \            /\ \__   
+\ \ \____  _ __   ___          \ \ \____    ___\ \ ,_\  
+ \ \ '__`\/\`'__\/ __`\  _______\ \ '__`\  / __`\ \ \/  
+  \ \ \L\ \ \ \//\ \L\ \/\______\\ \ \L\ \/\ \L\ \ \ \_ 
+   \ \_,__/\ \_\\ \____/\/______/ \ \_,__/\ \____/\ \__\
+    \/___/  \/_/ \/___/            \/___/  \/___/  \/__/
+  
 Welcome to our college robotic project. We are the Bro-bot team and for a our session project we had to make an open source robotic project.
 
 The Bro-Bot is a 3 degrees of freedom robot arm with a gripper at its end. The robot has 3 different control sytems: joint-directly controlled, cartesian teach controlled and impedance controlled. The grimper, on the other hand, is controlled by a wireless glove with flex sensors (inspired by a youtube project https://www.youtube.com/watch?v=uEd2B7fS8Eg&t=777s).
