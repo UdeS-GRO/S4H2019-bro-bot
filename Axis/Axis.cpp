@@ -1,4 +1,3 @@
-t
 /********
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
@@ -22,6 +21,9 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 	ID		= AxisID;
 	uint8_t get_id[16];
 	uint8_t scan_cnt = 0;
+
+	isFreeToMove = false;
+	torqueControlEnable = false;
 
 	// **** Initialisation de la communication avec les moteurs ****
 	result = dxl.init(DEVICE_NAME, 57600);
@@ -256,4 +258,17 @@ float Axis::convertValue2Angle(int value)
 int Axis::convertAngle2Value(float angle)
 {
     return (angle*4095/360);
+}
+
+
+void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
+{
+	counter_filter new_torque_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
+	torque_counter_filter = &new_torque_counter_filter;
+}
+
+void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
+{
+	counter_filter new_moving_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
+	moving_counter_filter = &new_moving_counter_filter;
 }

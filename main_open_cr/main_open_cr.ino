@@ -8,10 +8,24 @@
   #define DEVICE_NAME ""
 #endif
 
-String cmd[64]={"begin","57600"};
+//Constant declarations and definitions
+#define TORQUE_COUNTER_REFERENCE -10
+#define TORQUE_MAX_DIFFERENCE      50
+#define TORQUE_CNT_BEFORE_TRIGGER 150
+#define MOVING_CNT_BEFORE_TRIGGER 100
 
+//Global variables
+String cmd[64]={"begin","57600"};
+String cmd_tx[20];              //String to send to the motor after computing
+ 
 Axis *Axis01;
 
+
+//Function declarations
+void read_serial(void);
+void read_radio(void);
+
+// Initialisation
 void setup()
 {
     // Initialisation
@@ -19,9 +33,79 @@ void setup()
     while(!Serial);     // Wait until the serial is ready
     Axis01 = new Axis(1,57600); 
     Axis01->Zero();
+
+    /*Init for the torque control*/
+    Axis01->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);
+    Axis01->setTorqueFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
 }
 
 void loop() 
+{
+  //Read message
+  read_serial();
+  read_radio();
+
+
+  //Computing
+  torque_control(Axis01);
+    
+}
+
+
+void torque_control(Axis * axis)
+{
+  if (axis->torqueControlEnable ==true)
+  {
+    float present_load = float(axis->getTorque());
+    float present_moving = float(axis->getMovingStatus());
+    bool triggered =false;
+    
+  
+    if(axis->isFreeToMove == false)
+    {
+      /*Verify if something tries to force against the motor */
+      triggered = axis->torque_counter_filter->compute(present_load);
+      if(triggered)
+      {
+        cmd_tx[0] = String("torque_off "+  String(axis->ID));                                                   //TODO : Implementer un système de queue de message 
+        axis->isFreeToMove = true;
+        //Blink
+      }
+    }
+    else 
+    { 
+      /*Verify if something/someone is still moving the motor*/   
+      triggered = axis->moving_counter_filter->compute(present_moving);  
+      if(triggered)
+      {
+        cmd_tx[0] = String("torque_on");
+        cmd_tx[1] = String(axis->ID); 
+        dynamixel_command(cmd_tx);
+        
+        axis->isFreeToMove = false;
+        int actual_position = axis->getPosition();
+        //Convert angle: Demander a Jean-Michel si cest normal quil n'y a pas de conversion d'angle
+        //axis->moveTo(String (actual_position));           //Commented because of the issue above
+        // Stop Blink
+      }
+    }
+  }
+  else
+  {
+    axis->isFreeToMove = false;
+    axis->torque_counter_filter->reset_counter();
+    axis->moving_counter_filter->reset_counter();
+    //Stop blink 
+    //torque on
+  }
+}
+
+void read_radio(void)
+{
+  //À rajouter
+}
+
+void read_serial(void)
 {
     if(Serial.available())
     {
@@ -144,5 +228,4 @@ void loop()
         }
       
     }
-    
 }
