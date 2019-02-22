@@ -69,7 +69,7 @@ void torque_control(Axis * axis)
       {
         cmd_tx[0] = String("torque_off "+  String(axis->ID));                                                   //TODO : Implementer un système de queue de message 
         axis->isFreeToMove = true;
-        //Blink
+        axis->blink(GREEN_BLINK,500);   //Blink 500 ms
       }
     }
     else 
@@ -86,7 +86,7 @@ void torque_control(Axis * axis)
         int actual_position = axis->getPosition();
         //Convert angle: Demander a Jean-Michel si cest normal quil n'y a pas de conversion d'angle
         //axis->moveTo(String (actual_position));           //Commented because of the issue above
-        // Stop Blink
+        axis->blink(STOP_BLINK,500);   //Blink 500 ms
       }
     }
   }
@@ -95,8 +95,11 @@ void torque_control(Axis * axis)
     axis->isFreeToMove = false;
     axis->torque_counter_filter->reset_counter();
     axis->moving_counter_filter->reset_counter();
-    //Stop blink 
-    //torque on
+    axis->blink(STOP_BLINK,500);   //Blink 500 ms
+    
+    cmd_tx[0] = String("torque_on");
+    cmd_tx[1] = String(axis->ID); 
+    dynamixel_command(cmd_tx);
   }
 }
 

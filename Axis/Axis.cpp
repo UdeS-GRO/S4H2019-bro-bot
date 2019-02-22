@@ -24,6 +24,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 
 	isFreeToMove = false;
 	torqueControlEnable = false;
+	blink_timer=0;
 
 	// **** Initialisation de la communication avec les moteurs ****
 	result = dxl.init(DEVICE_NAME, 57600);
@@ -271,4 +272,34 @@ void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new
 {
 	counter_filter new_moving_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 	moving_counter_filter = &new_moving_counter_filter;
+}
+
+void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
+{
+	bool led_status = readRegister("LED");
+
+	if (new_blink_state != STOP_BLINK)
+	{
+		unsigned long actual_time = millis();
+
+		if (abs(actual_time - blink_timer) > time_open_millis)
+		{
+			blink_timer = actual_time;
+			if (led_status =true)
+			{
+				dxl.ledOff(ID, nullptr);
+			}
+			else
+			{
+				dxl.ledOn(ID, nullptr);
+			}
+		}
+	}
+	else
+	{
+		if (led_status = true)
+		{
+			dxl.ledOff(ID, nullptr);
+		}
+	}
 }

@@ -5,6 +5,13 @@ using namespace std;
 #include <DynamixelWorkbench.h>
 #include "WString.h"
 #include "counter_filter.h"
+#include "Arduino.h"
+
+enum blink_state 
+{
+	STOP_BLINK = 0,
+	GREEN_BLINK = 1,
+};
 
 class Axis
 {
@@ -39,9 +46,10 @@ public:
 	void setMovingFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger);
 	counter_filter* torque_counter_filter;	//Used for the torque control
 	counter_filter* moving_counter_filter;	//Used for the torque control
+	void blink(blink_state new_blink_state, unsigned long time_open_millis);
 
 private:
-
+	unsigned long blink_timer;
 	const char *log = NULL;
 	bool result = false;
 
