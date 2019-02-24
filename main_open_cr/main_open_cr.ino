@@ -30,8 +30,7 @@ void loop()
       split(read_string, ' ', cmd);   
       if(cmd[0] == "joint")
         { 
-           int temp = cmd[1].toInt()*4095/360;
-           cmd[1] = String(temp);
+           convertAngle(cmd);
            Axis01->moveTo(cmd[1]);
         }
      
@@ -143,6 +142,11 @@ void loop()
           dynamixel_command(cmd);
         }
       
-    }
-    
+    }    
+}
+void convertAngle(String* cmd)
+{ 
+        int temp = cmd[1].toInt();
+        temp= temp*4095/360;
+        cmd[1] = String(temp); 
 }

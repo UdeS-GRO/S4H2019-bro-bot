@@ -1,4 +1,4 @@
-t
+
 /********
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
