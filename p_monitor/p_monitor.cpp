@@ -25,7 +25,7 @@
   #define DEVICE_NAME "3" //Dynamixel on Serial3(USART3)  <-OpenCM 485EXP
 #elif defined(__OPENCR__)
   #define DEVICE_NAME ""
-#endif   
+#endif
 
 #define STRING_BUF_NUM 64
 //String cmd[STRING_BUF_NUM];     //Modification: the cmd string list is now a parameter of dynamixel_command()
@@ -43,7 +43,7 @@ void printInst();
  * Function name: dynamixel_command()
  * Paramters: cmd : Array of string that contains commands and parameters from serial
  * Returns : Nothing
- * 
+ *
  * Description: Takes a dynamixelcommand and its parameters to send the appropriate command to the dynamixel
  */
 
@@ -72,15 +72,15 @@ void dynamixel_command(String cmd[])
       else
       {
         Serial.print("Succeed to init : ");
-        Serial.println(baud);  
+        Serial.println(baud);
       }
     }
     else if (cmd[0] == "end")
-    {        
+    {
       return;
     }
     else if (cmd[0] == "scan")
-    { 
+    {
       if (cmd[1] == '\0')
         cmd[1] = String("253");
 
@@ -104,7 +104,7 @@ void dynamixel_command(String cmd[])
           Serial.print(" model name : ");
           Serial.println(dxl_wb.getModelName(get_id[cnt]));
         }
-      }  
+      }
     }
     else if (cmd[0] == "ping")
     {
@@ -199,7 +199,7 @@ void dynamixel_command(String cmd[])
                   default:
                     data = getAllRegisteredData[control_item[index].address];
                     break;
-                } 
+                }
               }
             }
           }
@@ -227,7 +227,7 @@ void dynamixel_command(String cmd[])
       else if (cmd[0] == "sync_read_handler")
       {
         static uint8_t sync_read_handler_index = 0;
-        uint8_t id = cmd[1].toInt();        
+        uint8_t id = cmd[1].toInt();
 
         result = dxl_wb.addSyncReadHandler(id, cmd[2].c_str(), &log);
         if (result == false)
@@ -475,8 +475,9 @@ void dynamixel_command(String cmd[])
       {
         uint8_t id    = cmd[1].toInt();
         uint16_t goal = cmd[2].toInt();
+        uint32_t velocity = cmd[3].toInt();
 
-        result = dxl_wb.jointMode(id, 0, 0, &log);
+        result = dxl_wb.jointMode(id, velocity, 0, &log);
         if (result == false)
         {
           Serial.println(log);
@@ -527,8 +528,8 @@ void dynamixel_command(String cmd[])
       }
       else if (cmd[0] == "write")
       {
-        uint8_t id = cmd[1].toInt();      
-        uint32_t value = cmd[3].toInt(); 
+        uint8_t id = cmd[1].toInt();
+        uint32_t value = cmd[3].toInt();
 
         result = dxl_wb.writeRegister(id, cmd[2].c_str(), value, &log);
         if (result == false)
@@ -547,7 +548,7 @@ void dynamixel_command(String cmd[])
         uint8_t id = cmd[1].toInt();
 
         int32_t data = 0;
-        
+
         result = dxl_wb.readRegister(id, cmd[2].c_str(), &data, &log);
         if (result == false)
         {
@@ -594,12 +595,12 @@ void dynamixel_command(String cmd[])
           Serial.println(log);
         }
       }
-      else 
+      else
       {
         Serial.println("Wrong command");
       }
     }
-    else 
+    else
     {
       Serial.println("Please check ID");
     }
@@ -612,7 +613,7 @@ void split(String data, char separator, String* temp)
 	int get_index = 0;
 
   String copy = data;
-  
+
 	while(true)
 	{
 		get_index = copy.indexOf(separator);
