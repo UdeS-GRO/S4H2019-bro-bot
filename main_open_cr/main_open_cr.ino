@@ -17,9 +17,7 @@
 
 //Global variables
 String cmd[64]={"begin","57600"};
-
 String cmd_tx[20];              //String to send to the motor after computing
-
 Axis *Axis_table[NUMBER_OF_AXIS];
 
 
@@ -28,6 +26,7 @@ void read_serial(void);
 void read_radio(void);
 void torque_control(Axis * axis);
 void fix_com(void);
+void ack_msg(void);
 
 
 // Initialisation
@@ -257,7 +256,8 @@ void read_serial(void)
               }
             
             }
-  
+            //Position achieve. Send an ack flag to the py
+            ack_msg();
          }
         else if (cmd[0] == "torque_control_enable")
         {
@@ -291,5 +291,10 @@ void fix_com(void)
     cmd_tx[0] = String("scan");
     cmd_tx[1] = String("3"); 
     dynamixel_command(cmd_tx);
+}
+
+void ack_msg(void)
+{
+  Serial.println("nolidge");
 }
 
