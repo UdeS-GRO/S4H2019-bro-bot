@@ -16,11 +16,12 @@ enum blink_state
 class Axis
 {
 public:
-	Axis(uint8_t ID, uint32_t baud);
+	Axis(uint8_t ID, uint32_t baud, int new_model = 350);
 	~Axis();
 	int tews;
 
 	uint8_t ID;
+	int model;
 
 	bool isFreeToMove;						//Used for the torque control
 	bool torqueControlEnable;				//Used for the torque control
@@ -28,7 +29,7 @@ public:
 	DynamixelWorkbench dxl;
 	float Sts_ActualPosition;
 	float Sts_ActualCurrent;
-	float Sts_ActualTorque;
+	int Sts_ActualTorque;
 	float Sts_ActualVelocity;
 	bool Sts_Moving;
 	bool Sts_AtPosition;
@@ -37,7 +38,7 @@ public:
 	void  Zero();
 	int	getPosition();
 	int	getCurrent();
-	int	getTorque();
+	int getTorque();
 	int	getVelocity();
 	int	getMovingStatus();
 	int readRegister(String regName);
