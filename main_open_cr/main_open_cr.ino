@@ -141,23 +141,7 @@ void read_serial(void)
       String read_string = Serial.readStringUntil('\n');
       read_string.trim();    
       split(read_string, ' ', cmd);   
-<<<<<<< HEAD
-      if(cmd[0] == "joint")
-        { 
-           convertAngle(cmd);
-           Axis01->moveTo(cmd[1]);
-        }
-     
-      if(cmd[0] == "zero")
-       {
-          Axis01->Zero();
-       }
-       
-      if(cmd[0] == "speed")
-       {
-          Axis01->moveAtSpeed(cmd[1]);
-       }
-=======
+
       Axis* axis;
       /* Is the motor available */
       if ((cmd[1].toInt()  >= 1)  && (cmd[1].toInt()  < NUMBER_OF_AXIS))
@@ -171,9 +155,7 @@ void read_serial(void)
              int temp = cmd[2].toInt()*4095/360;
              cmd[2] = String(temp);
              axis->moveTo(cmd[2]);
-          }
->>>>>>> 1f48e57bc00e7c2497bbe34e1660115b9d1f95f6
-       
+          }  
         else if(cmd[0] == "zero")
          {
             axis->Zero();
@@ -254,7 +236,7 @@ void read_serial(void)
               axis->moveAtSpeed("100");
               while(1)
               {
-                if(axis->getPosition() >= (goalpos+2))
+                if(axis->getPosition() >= (goalpos-2)||axis->getPosition() >= axis->MaxSoftlimit)||axis->getPosition()<= MinSoftlimit)
                 {
                    axis->moveAtSpeed("0");
                    break;
@@ -266,7 +248,7 @@ void read_serial(void)
               axis->moveAtSpeed("-100");
               while(1)
               {
-                if(axis->getPosition() <= (goalpos+2))
+                if(axis->getPosition() <= (goalpos+2)||axis->softLimit||axis->getPosition() >= axis->MaxSoftlimit)||axis->getPosition()<= MinSoftlimit)
                 {
                    axis->moveAtSpeed("0");
                    break;
@@ -281,9 +263,6 @@ void read_serial(void)
         {
           axis->torqueControlEnable = true;
         }
-<<<<<<< HEAD
-      
-<<<<<<< HEAD
     }    
 }
 void convertAngle(String* cmd)
@@ -291,9 +270,7 @@ void convertAngle(String* cmd)
         int temp = cmd[1].toInt();
         temp= temp*4095/360;
         cmd[1] = String(temp); 
-=======
-=======
-        
+
         else if (cmd[0] == "torque_control_disable")
         {
           axis->torqueControlEnable = false;
@@ -309,9 +286,8 @@ void convertAngle(String* cmd)
       {
          dynamixel_command(cmd);
       }
->>>>>>> 1f48e57bc00e7c2497bbe34e1660115b9d1f95f6
     }
->>>>>>> 3f32f45dcee8bcf9f178077325f960f86193b91e
+
 }
 
 
@@ -329,4 +305,3 @@ void ack_msg(void)
 {
   Serial.println("nolidge");
 }
-
