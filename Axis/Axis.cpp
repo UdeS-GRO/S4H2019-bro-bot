@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3f32f45dcee8bcf9f178077325f960f86193b91e
 /********
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
@@ -22,6 +25,10 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 	ID		= AxisID;
 	uint8_t get_id[16];
 	uint8_t scan_cnt = 0;
+
+	isFreeToMove = false;
+	torqueControlEnable = false;
+	blink_timer=0;
 
 	// **** Initialisation de la communication avec les moteurs ****
 	result = dxl.init(DEVICE_NAME, 57600);
@@ -256,4 +263,47 @@ float Axis::convertValue2Angle(int value)
 int Axis::convertAngle2Value(float angle)
 {
     return (angle*4095/360);
+}
+
+
+void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
+{
+	counter_filter new_torque_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
+	torque_counter_filter = &new_torque_counter_filter;
+}
+
+void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
+{
+	counter_filter new_moving_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
+	moving_counter_filter = &new_moving_counter_filter;
+}
+
+void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
+{
+	bool led_status = readRegister("LED");
+
+	if (new_blink_state != STOP_BLINK)
+	{
+		unsigned long actual_time = millis();
+
+		if (abs(actual_time - blink_timer) > time_open_millis)
+		{
+			blink_timer = actual_time;
+			if (led_status =true)
+			{
+				dxl.ledOff(ID, nullptr);
+			}
+			else
+			{
+				dxl.ledOn(ID, nullptr);
+			}
+		}
+	}
+	else
+	{
+		if (led_status = true)
+		{
+			dxl.ledOff(ID, nullptr);
+		}
+	}
 }
