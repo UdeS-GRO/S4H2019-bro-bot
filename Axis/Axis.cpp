@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> 3f32f45dcee8bcf9f178077325f960f86193b91e
 /********
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
- * Date: 06 Février 2019 (creation)
+ * Date: 06 Fevrier 2019 (creation)
  * Description: Implementation des methodes des classes decrites dans
  *    forme.h. Les methodes de la classe Forme ne doivent pas etre
  *    modifiees. Ce fichier fait partie de la distribution de Graphicus.
@@ -20,7 +16,9 @@ using namespace std;
   #define DEVICE_NAME ""
 #endif
 
-Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model)
+// **************** Class Constructor ****************
+
+Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSoft)
 {
 	ID		= AxisID;
 	uint8_t get_id[16];
@@ -29,6 +27,9 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model)
 	isFreeToMove = false;
 	torqueControlEnable = false;
 	blink_timer=0;
+
+	MaxSoftlimit = MaxSoft;
+	MinSoftlimit = MinSoft;
 
 	torque_counter_filter = NULL;
 	moving_counter_filter = NULL;
@@ -80,221 +81,218 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model)
 	}
 }
 
+// **************** Class Destructor ****************
+
 Axis::~Axis()
 {
 	delete torque_counter_filter;
 	delete moving_counter_filter;
 }
 
-int Axis::readRegister(String regName)
+
+// *****************************************************************************************************
+// ***************************************** PUBLIC METHODS ********************************************
+// *****************************************************************************************************
+
+// **************** Enabling Methods ****************
+
+void Axis::Enable()
 {
-	int32_t data = 0;
-
-
-	int result = dxl.itemRead(ID, regName.c_str(), &data, &log);
-
-	if (result == false)
-        {
-          //Serial.println(log);	//test
-         // Serial.println("Failed to read");
-        }
-        else
-        {
-          //Serial.println(log);	//test
-          //Serial.print("read data : ");
-          //Serial.println(data);
-        }
-
-	return data;
-}
-
-void Axis::writeRegister(String regName, int32_t value)
-{
-	int result = dxl.writeRegister(ID, regName.c_str(), value, &log);
-	if (result == false)
+	result = dxl.torqueOn(ID, &log);
+	if(debugMode == 1)
 	{
-		Serial.println(log);
-		Serial.println("Failed to write");
-	}
-	else
-	{
-		Serial.println(log);
-		Serial.print("Succeed to write data : ");
-		Serial.println(value);
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
 	}
 }
+
+void Axis::Disable()
+{
+	result = dxl.torqueOff(ID, &log);
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
+	}
+}
+
+// **************** Moving Methods ****************
 
 void Axis::Zero()
 {
-    result = dxl.jointMode(ID, 0, 0, &log);
-        if (result == false)
-        {
-          Serial.println(log);
-          return;
-        }
-        else
-        {
-          Serial.println(log);
-        }
+	result = dxl.jointMode(ID, 0, 0, &log);
 
-        result = dxl.goalPosition(ID, (int32_t)0, &log);
-        if (result == false)
-        {
-          Serial.println(log);
-          return;
-        }
-        else
-        {
-          Serial.println(log);
-        }
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
+	}
+
+	result = dxl.goalPosition(ID, (int32_t)0, &log);
+
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
+	}
 }
 
 void Axis::moveTo(String cmd)
 {
-    uint16_t position = cmd.toInt();
-    result = dxl.jointMode(ID, 0, 0, &log);
-        if (result == false)
-        {
-          Serial.println(log);
-          return;
-        }
-        else
-        {
-          Serial.println(log);
-        }
+	uint16_t position = cmd.toInt();
 
-        result = dxl.goalPosition(ID, (int32_t)position, &log);
-        if (result == false)
-        {
-          Serial.println(log);
-          return;
-        }
-        else
-        {
-          Serial.println(log);
-        }
+	if(position > MaxSoftlimit)
+	{
+		position = MaxSoftlimit;
+	}
+	else if (position < MinSoftlimit)
+	{
+		position = MinSoftlimit;
+	}
+	
+	result = dxl.jointMode(ID, 0, 0, &log);
+
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
+	}
+
+	result = dxl.goalPosition(ID, (int32_t)position, &log);
+
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			return;
+		}
+		else
+		{
+			Serial.println(log);
+		}
+	}
 }
-
 
 void Axis::moveAtSpeed(String cmd)
 {
 
-    int32_t vitesse  = cmd.toInt();
+	int32_t vitesse  = cmd.toInt();
 
-    result = dxl.wheelMode(ID, 0, &log);
-    if (result == false)
-    {
-        Serial.println(log);
-        return;
-    }
-    else
-    {
-        Serial.println(log);
-    }
+	result = dxl.wheelMode(ID, 0, &log);
 
-    result = dxl.goalVelocity(ID, (int32_t)vitesse, &log);
-    if (result == false)
-    {
-        Serial.println(log);
-        return;
-    }
-    else
-    {
-        Serial.println(log);
-    }
-}
-
-
-int Axis::getPosition()
-{
-	Sts_ActualPosition = convertValue2Angle(readRegister("Present_Position"));
-
-	if(Sts_ActualPosition>360)
+	if(debugMode == 1)
 	{
-		float temp = (Sts_ActualPosition/360)-(int(Sts_ActualPosition/360));
-		Sts_ActualPosition = (temp*360);
+		if (result == false)
+		{
+				Serial.println(log);
+				return;
+		}
+		else
+		{
+				Serial.println(log);
+		}
 	}
 
-	Serial.println("Actual Position is : ");
-	Serial.println(Sts_ActualPosition);
+	result = dxl.goalVelocity(ID, (int32_t)vitesse, &log);
 
-	return Sts_ActualPosition;
-}
-
-int Axis::getCurrent()
-{
-	Sts_ActualCurrent = dxl.convertValue2Current(readRegister("Present_Current"));
-
-	Serial.println("Actual Current is : ");
-	Serial.println(Sts_ActualCurrent);
-	Serial.println(" mA");
-
-	return Sts_ActualCurrent;
-}
-
-int Axis::getTorque()
-{
-	
-	if (model == 350)
+	if(debugMode == 1)
 	{
-		Sts_ActualTorque = int(dxl.convertValue2Load(readRegister("Present_Current")));
+		if (result == false)
+		{
+				Serial.println(log);
+				return;
+		}
+		else
+		{
+				Serial.println(log);
+		}
 	}
-	else if (model == 250)
-	{
-		Sts_ActualTorque = int(readRegister("Present_Load"));
-	}
-	else 
-	{
-		Serial.println("Model unknow: can not get torque");
-	}
-
-	//Serial.println(" %");					//test: 
-	//Serial.println(" %");					//test: 
-	//Serial.println("Actual Torque is : ");
-	//Serial.println((short)Sts_ActualTorque);
-	//Serial.println(" %");
-
-	return Sts_ActualTorque;
 }
 
-int Axis::getVelocity()
+// **************** Set Parameters Methods ****************
+
+void Axis::setMaxSoftlimit(String cmd)
 {
-	Sts_ActualVelocity = dxl.convertValue2Velocity(ID,readRegister("Present_Velocity"));
+	int32_t value = cmd.toInt();
 
-	Serial.println("Actual Velocity is : ");
-	Serial.println(Sts_ActualVelocity);
-	Serial.println(" RPM");
-
-	return Sts_ActualVelocity;
-}
-
-int Axis::getMovingStatus()
-{
-	Sts_Moving = readRegister("Moving");
-
-	if(Sts_Moving)
+	if(value >= MinSoftlimit && value <= 359 && value >= 0)
 	{
-		//Serial.println("Motor is Running");		//test
+		MaxSoftlimit = value;
+		writeRegister("Max_Position_Limit", value);
+		
+		if(debugMode == 1)
+		{
+			Serial.println('Succed to set Maximum Softlimit');
+		}
 	}
 	else
 	{
-		//Serial.println("Motor is stopped");		//test
+		if(debugMode == 1)
+		{
+			Serial.println('Fail to set Maximum Softlimit');
+		}
 	}
-
-
-	return Sts_Moving;
 }
 
-float Axis::convertValue2Angle(int value)
+void Axis::setMinSoftlimit(String cmd)
 {
-    return (value*360/4095);
-}
+	int32_t value = cmd.toInt();
 
-int Axis::convertAngle2Value(float angle)
-{
-    return (angle*4095/360);
+	if(value <= MaxSoftlimit && value <= 359 && value >= 0)
+	{
+		MinSoftlimit = value;
+		writeRegister("Min_Position_Limit", value);
+		
+		if(debugMode == 1)
+		{
+			Serial.println('Succed to set Minimum Softlimit');
+		}
+	}
+	else
+	{
+		if(debugMode == 1)
+		{
+			Serial.println('Fail to set Minimum Softlimit');
+			Serial.println('Invalid data for Minimum Softlimit');
+		}
+	}
 }
-
 
 void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
 {
@@ -341,4 +339,161 @@ void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 			dxl.ledOff(ID, nullptr);
 		}
 	}
+}
+
+// **************** Read Paramters Methods ****************
+
+int Axis::getPosition()
+{
+	Sts_ActualPosition = convertValue2Angle(readRegister("Present_Position"));
+
+	if(Sts_ActualPosition>360)
+	{
+		float temp = (Sts_ActualPosition/360)-(int(Sts_ActualPosition/360));
+		Sts_ActualPosition = (temp*360);
+	}
+
+	if(debugMode == 1)
+	{
+		Serial.println("Actual Position is : ");
+		Serial.println(Sts_ActualPosition);
+	}
+
+	return Sts_ActualPosition;
+}
+
+int Axis::getCurrent()
+{
+	Sts_ActualCurrent = dxl.convertValue2Current(readRegister("Present_Current"));
+
+	if(debugMode == 1)
+	{
+		Serial.println("Actual Current is : ");
+		Serial.println(Sts_ActualCurrent);
+		Serial.println(" mA");
+	}
+
+	return Sts_ActualCurrent;
+}
+
+int Axis::getTorque()
+{
+	
+	if (model == 350)
+	{
+		Sts_ActualTorque = int(dxl.convertValue2Load(readRegister("Present_Current")));
+	}
+	else if (model == 250)
+	{
+		Sts_ActualTorque = int(readRegister("Present_Load"));
+	}
+	else 
+	{
+		Serial.println("Model unknow: can not get torque");
+	}
+
+	if(debugMode == 1)
+	{
+		Serial.println("Actual Torque is : ");
+		Serial.println((short)Sts_ActualTorque);
+		Serial.println(" %");
+	}
+
+	return Sts_ActualTorque;
+}
+
+int Axis::getVelocity()
+{
+	Sts_ActualVelocity = dxl.convertValue2Velocity(ID,readRegister("Present_Velocity"));
+
+	if(debugMode == 1)
+	{
+		Serial.println("Actual Velocity is : ");
+		Serial.println(Sts_ActualVelocity);
+		Serial.println(" RPM");
+	}
+
+	return Sts_ActualVelocity;
+}
+
+int Axis::getMovingStatus()
+{
+	Sts_Moving = readRegister("Moving");
+
+	if(debugMode == 1)
+	{
+		if(Sts_Moving)
+		{
+			Serial.println("Motor is Running");
+		}
+		else
+		{
+			Serial.println("Motor is stopped");
+		}
+	}
+
+	return Sts_Moving;
+}
+
+// **************** Read/Write Register Methods ****************
+
+int Axis::readRegister(String regName)
+{
+	int32_t data = 0;
+
+
+	int result = dxl.itemRead(ID, regName.c_str(), &data, &log);
+
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);	//test
+			Serial.println("Failed to read");
+		}
+		else
+		{
+			Serial.println(log);	//test
+			Serial.print("read data : ");
+			Serial.println(data);
+		}
+	}
+
+	return data;
+}
+
+void Axis::writeRegister(String regName, int32_t value)
+{
+	int result = dxl.writeRegister(ID, regName.c_str(), value, &log);
+
+	if(debugMode == 1)
+	{
+		if (result == false)
+		{
+			Serial.println(log);
+			Serial.println("Failed to write");
+		}
+		else
+		{
+			Serial.println(log);
+			Serial.print("Succeed to write data : ");
+			Serial.println(value);
+		}
+	}
+}
+
+// *****************************************************************************************************
+// **************************************** PRIVATE METHODS ********************************************
+// *****************************************************************************************************
+
+// **************** Convertion Methods ****************
+
+float Axis::convertValue2Angle(int value)
+{
+    return (value*360/4095);
+}
+
+int Axis::convertAngle2Value(float angle)
+{
+    return (angle*4095/360);
 }
