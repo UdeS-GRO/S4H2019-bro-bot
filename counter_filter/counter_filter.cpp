@@ -1,5 +1,5 @@
 #include "counter_filter.h"
-
+#include "arduino.h"
 
 
 counter_filter::counter_filter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
@@ -18,8 +18,9 @@ counter_filter::~counter_filter()
 bool counter_filter::compute(float present_value)
 {
 	bool value_to_return = false;
+	float diff = (float)absolute(present_value - reference);
 
-	if (absolute(present_value - reference) > maxDifference)
+	if ((diff - maxDifference) > 0.001)
 	{
 		counter++;
 	}
@@ -36,6 +37,8 @@ bool counter_filter::compute(float present_value)
 	{
 		value_to_return = true;
 	}
+
+	return value_to_return;
 }
 
 bool counter_filter::isTriggered(void)

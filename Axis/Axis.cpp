@@ -20,7 +20,7 @@ using namespace std;
   #define DEVICE_NAME ""
 #endif
 
-Axis::Axis(uint8_t AxisID, uint32_t baud)
+Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model)
 {
 	ID		= AxisID;
 	uint8_t get_id[16];
@@ -29,6 +29,19 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 	isFreeToMove = false;
 	torqueControlEnable = false;
 	blink_timer=0;
+
+	torque_counter_filter = NULL;
+	moving_counter_filter = NULL;
+
+	if ((new_model == 350) or (new_model == 250))
+	{ 
+		model = new_model;
+	}
+	else
+	{
+		Serial.println("New model unknow. Will consider it to be 350");
+		model = 350;
+	}
 
 	// **** Initialisation de la communication avec les moteurs ****
 	result = dxl.init(DEVICE_NAME, 57600);
@@ -68,7 +81,10 @@ Axis::Axis(uint8_t AxisID, uint32_t baud)
 }
 
 Axis::~Axis()
-{}
+{
+	delete torque_counter_filter;
+	delete moving_counter_filter;
+}
 
 int Axis::readRegister(String regName)
 {
@@ -79,12 +95,12 @@ int Axis::readRegister(String regName)
 
 	if (result == false)
         {
-          Serial.println(log);
+          //Serial.println(log);	//test
          // Serial.println("Failed to read");
         }
         else
         {
-          Serial.println(log);
+          //Serial.println(log);	//test
           //Serial.print("read data : ");
           //Serial.println(data);
         }
@@ -218,11 +234,25 @@ int Axis::getCurrent()
 
 int Axis::getTorque()
 {
-	Sts_ActualTorque = dxl.convertValue2Load(readRegister("Present_Current"));
+	
+	if (model == 350)
+	{
+		Sts_ActualTorque = int(dxl.convertValue2Load(readRegister("Present_Current")));
+	}
+	else if (model == 250)
+	{
+		Sts_ActualTorque = int(readRegister("Present_Load"));
+	}
+	else 
+	{
+		Serial.println("Model unknow: can not get torque");
+	}
 
-	Serial.println("Actual Torque is : ");
-	Serial.println(Sts_ActualTorque);
-	Serial.println(" %%");
+	//Serial.println(" %");					//test: 
+	//Serial.println(" %");					//test: 
+	//Serial.println("Actual Torque is : ");
+	//Serial.println((short)Sts_ActualTorque);
+	//Serial.println(" %");
 
 	return Sts_ActualTorque;
 }
@@ -244,11 +274,11 @@ int Axis::getMovingStatus()
 
 	if(Sts_Moving)
 	{
-		Serial.println("Motor is Running");
+		//Serial.println("Motor is Running");		//test
 	}
 	else
 	{
-		Serial.println("Motor is stopped");
+		//Serial.println("Motor is stopped");		//test
 	}
 
 
@@ -268,14 +298,20 @@ int Axis::convertAngle2Value(float angle)
 
 void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
 {
-	counter_filter new_torque_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
-	torque_counter_filter = &new_torque_counter_filter;
+	if (torque_counter_filter != NULL)
+	{
+		delete torque_counter_filter;
+	}
+	torque_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
 void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
 {
-	counter_filter new_moving_counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
-	moving_counter_filter = &new_moving_counter_filter;
+	if (moving_counter_filter != NULL)
+	{
+		delete moving_counter_filter;
+	}
+	moving_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
 void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
@@ -285,11 +321,10 @@ void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 	if (new_blink_state != STOP_BLINK)
 	{
 		unsigned long actual_time = millis();
-
 		if (abs(actual_time - blink_timer) > time_open_millis)
 		{
 			blink_timer = actual_time;
-			if (led_status =true)
+			if (led_status == true)
 			{
 				dxl.ledOff(ID, nullptr);
 			}

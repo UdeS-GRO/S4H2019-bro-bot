@@ -9,21 +9,25 @@
 #endif
 
 //Constant declarations and definitions
-#define TORQUE_COUNTER_REFERENCE -10
-#define TORQUE_MAX_DIFFERENCE      50
-#define TORQUE_CNT_BEFORE_TRIGGER 150
-#define MOVING_CNT_BEFORE_TRIGGER 100
+#define TORQUE_COUNTER_REFERENCE  0
+#define TORQUE_MAX_DIFFERENCE     40
+#define TORQUE_CNT_BEFORE_TRIGGER 300
+#define MOVING_CNT_BEFORE_TRIGGER 300
+#define NUMBER_OF_AXIS            4   //+ 1 because there is no axis 0
 
 //Global variables
 String cmd[64]={"begin","57600"};
 String cmd_tx[20];              //String to send to the motor after computing
- 
-Axis *Axis01;
+Axis *Axis_table[NUMBER_OF_AXIS];
 
 
 //Function declarations
 void read_serial(void);
 void read_radio(void);
+void torque_control(Axis * axis);
+void fix_com(void);
+void ack_msg(void);
+
 
 // Initialisation
 void setup()
@@ -31,12 +35,19 @@ void setup()
     // Initialisation
     Serial.begin(57600);
     while(!Serial);     // Wait until the serial is ready
-    Axis01 = new Axis(1,57600); 
-    Axis01->Zero();
+    
+    fix_com();
+    
+    /* Axis creation*/
+    Axis_table[0] = NULL; //There is no axis 0
+    Axis_table[1] = new Axis(1,57600,250); 
+    Axis_table[2] = new Axis(2,57600,350);
+    Axis_table[3] = new Axis(3,57600,250);  
 
     /*Init for the torque control*/
-    Axis01->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);
-    Axis01->setTorqueFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
+    Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
+    Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
+
 }
 
 void loop() 
@@ -47,8 +58,13 @@ void loop()
 
 
   //Computing
-  torque_control(Axis01);
-    
+  short axis_index;
+  for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+  {
+    torque_control(Axis_table[axis_index]);
+  }
+
+  
 }
 
 
@@ -56,18 +72,23 @@ void torque_control(Axis * axis)
 {
   if (axis->torqueControlEnable ==true)
   {
-    float present_load = float(axis->getTorque());
-    float present_moving = float(axis->getMovingStatus());
+    short present_load = (short)axis->getTorque();  //COnvert to char to have negative value
+    float present_load_f = (float)present_load;     //Convert to float
+    float present_moving = (float)(1-axis->getMovingStatus());
     bool triggered =false;
-    
   
     if(axis->isFreeToMove == false)
     {
       /*Verify if something tries to force against the motor */
-      triggered = axis->torque_counter_filter->compute(present_load);
+     triggered = axis->torque_counter_filter->compute(present_load_f);        //test#0
+//     Serial.print("Torque_cnt: ");                                          //test: counter
+//     Serial.println(axis->torque_counter_filter->counter);
       if(triggered)
       {
-        cmd_tx[0] = String("torque_off "+  String(axis->ID));                                                   //TODO : Implementer un système de queue de message 
+        axis->moving_counter_filter->reset_counter();
+        cmd_tx[0] = String("torque_off");                                                   //TODO : Implementer un système de queue de message 
+        cmd_tx[1] = String(axis->ID);
+        dynamixel_command(cmd_tx); 
         axis->isFreeToMove = true;
         axis->blink(GREEN_BLINK,500);   //Blink 500 ms
       }
@@ -75,22 +96,26 @@ void torque_control(Axis * axis)
     else 
     { 
       /*Verify if something/someone is still moving the motor*/   
-      triggered = axis->moving_counter_filter->compute(present_moving);  
+      triggered = axis->moving_counter_filter->compute(present_moving);
+//      Serial.print("Moving_cnt: ");                                          //test: counter
+//      Serial.println(axis->moving_counter_filter->counter);  
+      axis->blink(GREEN_BLINK,500);   //Blink 500 ms
+      
       if(triggered)
       {
         cmd_tx[0] = String("torque_on");
         cmd_tx[1] = String(axis->ID); 
         dynamixel_command(cmd_tx);
+        axis->torque_counter_filter->reset_counter();
         
         axis->isFreeToMove = false;
-        int actual_position = axis->getPosition();
-        //Convert angle: Demander a Jean-Michel si cest normal quil n'y a pas de conversion d'angle
-        //axis->moveTo(String (actual_position));           //Commented because of the issue above
+
+        
         axis->blink(STOP_BLINK,500);   //Blink 500 ms
       }
     }
   }
-  else
+  else if (axis->isFreeToMove == true)
   {
     axis->isFreeToMove = false;
     axis->torque_counter_filter->reset_counter();
@@ -102,6 +127,7 @@ void torque_control(Axis * axis)
     dynamixel_command(cmd_tx);
   }
 }
+
 
 void read_radio(void)
 {
@@ -115,6 +141,7 @@ void read_serial(void)
       String read_string = Serial.readStringUntil('\n');
       read_string.trim();    
       split(read_string, ' ', cmd);   
+<<<<<<< HEAD
       if(cmd[0] == "joint")
         { 
            convertAngle(cmd);
@@ -130,104 +157,131 @@ void read_serial(void)
        {
           Axis01->moveAtSpeed(cmd[1]);
        }
+=======
+      Axis* axis;
+      /* Is the motor available */
+      if ((cmd[1].toInt()  >= 1)  && (cmd[1].toInt()  < NUMBER_OF_AXIS))
+      {
+        /* Select the right motor to talk to*/
+        axis = Axis_table[cmd[1].toInt()];
+      
+      
+        if(cmd[0] == "joint")
+          { 
+             int temp = cmd[2].toInt()*4095/360;
+             cmd[2] = String(temp);
+             axis->moveTo(cmd[2]);
+          }
+>>>>>>> 1f48e57bc00e7c2497bbe34e1660115b9d1f95f6
        
-      if(cmd[0] == "rd")
-       {
-          Axis01->readRegister(cmd[1]);
-       }
-      else if(cmd[0] == "wr")
-       {
-          Axis01->writeRegister(cmd[1],cmd[2].toInt());
-       }
-      else if(cmd[0] == "Pos")
-       {
-          Axis01->getPosition();
-       }
-      else if(cmd[0] == "Move")
-       {
-          Axis01->getMovingStatus();
-       }
-      else if(cmd[0] == "Cur")
-       {
-          Axis01->getCurrent();
-       }
-      else if(cmd[0] == "Torq")
-       {
-          Axis01->getTorque();
-       }
-      else if(cmd[0] == "Vel")
-       {
-          Axis01->getVelocity();
-       }
-      else if(cmd[0] == "movefrom")
-       {
-          int startpos = Axis01->getPosition();
-          int depPos   = cmd[1].toInt();
-          int endpos = depPos+startpos;
-          if (endpos > 360)
-          {
-            endpos-=360;
-            Axis01->moveAtSpeed("-100");
-            while(1)
-            {
-              if(Axis01->getPosition() <= endpos)
-              {
-                Axis01->moveAtSpeed("0");
-                break;
-              }
-            }
-            
-          }
-          else
-          {
-            Axis01->moveAtSpeed("100");
-            while(1)
-            {
-              if(Axis01->getPosition() >= endpos)
-              {
-                Axis01->moveAtSpeed("0");
-                break;
-              }
-            }
-          }
+        else if(cmd[0] == "zero")
+         {
+            axis->Zero();
          }
-       
-      else if(cmd[0] == "moveto")
-       {
-          int goalpos = cmd[1].toInt();
-          Serial.println(goalpos);
-
-          if(goalpos > Axis01->getPosition())
-          {
-            Axis01->moveAtSpeed("100");
-            while(1)
+         
+        else if(cmd[0] == "speed")
+         {
+            axis->moveAtSpeed(cmd[2]);
+         }
+         
+        else if(cmd[0] == "rd")
+         {
+            axis->readRegister(cmd[2]);
+         }
+        else if(cmd[0] == "wr")
+         {
+            axis->writeRegister(cmd[1],cmd[2].toInt());
+         }
+        else if(cmd[0] == "Pos")
+         {
+            axis->getPosition();
+         }
+        else if(cmd[0] == "Move")
+         {
+            axis->getMovingStatus();
+         }
+        else if(cmd[0] == "Cur")
+         {
+            axis->getCurrent();
+         }
+        else if(cmd[0] == "Torq")
+         {
+            axis->getTorque();
+         }
+        else if(cmd[0] == "Vel")
+         {
+            axis->getVelocity();
+         }
+        else if(cmd[0] == "movefrom")
+         {
+            int startpos = axis->getPosition();
+            int depPos   = cmd[2].toInt();
+            int endpos = depPos+startpos;
+            if (endpos > 360)
             {
-              if(Axis01->getPosition() >= (goalpos+2))
+              endpos-=360;
+              axis->moveAtSpeed("-100");
+              while(1)
               {
-                 Axis01->moveAtSpeed("0");
-                 break;
+                if(axis->getPosition() <= endpos)
+                {
+                  axis->moveAtSpeed("0");
+                  break;
+                }
+              }
+              
+            }
+            else
+            {
+              axis->moveAtSpeed("100");
+              while(1)
+              {
+                if(axis->getPosition() >= endpos)
+                {
+                  axis->moveAtSpeed("0");
+                  break;
+                }
               }
             }
-          }
-          else
-          {
-            Axis01->moveAtSpeed("-100");
-            while(1)
+           }
+        else if(cmd[0] == "moveto")
+         {
+            int goalpos = cmd[2].toInt();
+            Serial.println(goalpos);
+  
+            if(goalpos > axis->getPosition())
             {
-              if(Axis01->getPosition() <= (goalpos+2))
+              axis->moveAtSpeed("100");
+              while(1)
               {
-                 Axis01->moveAtSpeed("0");
-                 break;
+                if(axis->getPosition() >= (goalpos+2))
+                {
+                   axis->moveAtSpeed("0");
+                   break;
+                }
               }
             }
-          
-          }
-
-       }
-      else 
+            else
+            {
+              axis->moveAtSpeed("-100");
+              while(1)
+              {
+                if(axis->getPosition() <= (goalpos+2))
+                {
+                   axis->moveAtSpeed("0");
+                   break;
+                }
+              }
+            
+            }
+            //Position achieve. Send an ack flag to the py
+            ack_msg();
+         }
+        else if (cmd[0] == "torque_control_enable")
         {
-          dynamixel_command(cmd);
+          axis->torqueControlEnable = true;
         }
+<<<<<<< HEAD
       
 <<<<<<< HEAD
     }    
@@ -238,6 +292,41 @@ void convertAngle(String* cmd)
         temp= temp*4095/360;
         cmd[1] = String(temp); 
 =======
+=======
+        
+        else if (cmd[0] == "torque_control_disable")
+        {
+          axis->torqueControlEnable = false;
+        }
+        
+        else 
+          {
+            dynamixel_command(cmd);
+          }
+        
+      }
+      else 
+      {
+         dynamixel_command(cmd);
+      }
+>>>>>>> 1f48e57bc00e7c2497bbe34e1660115b9d1f95f6
     }
 >>>>>>> 3f32f45dcee8bcf9f178077325f960f86193b91e
 }
+
+
+void fix_com(void)
+{
+    cmd_tx[0] = String("begin");    //Bug qui doit être régler
+    cmd_tx[1] = String("57600"); 
+    dynamixel_command(cmd_tx);
+    cmd_tx[0] = String("scan");
+    cmd_tx[1] = String("3"); 
+    dynamixel_command(cmd_tx);
+}
+
+void ack_msg(void)
+{
+  Serial.println("nolidge");
+}
+

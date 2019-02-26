@@ -16,9 +16,11 @@ public:
 	void setCounterBeforeTrigger(int new_counterBeforeTrigger);
 	int reset_counter(void);
 	int getCounter(void);
+	int	counter;
+
+
 
 private:
-	int	counter;
 	float reference;
 	float maxDifference;
 	int counterBeforeTrigger;

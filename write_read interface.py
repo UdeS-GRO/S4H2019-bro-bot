@@ -8,6 +8,7 @@
 from threading import Thread
 #import serial
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
+import time
 
 #ser_write = serial.Serial("/dev/ttyACM0",115200)
 #ser_read = serial.Serial("/dev/ttyACM0",115200)
@@ -23,10 +24,6 @@ listeMoteur3 = [angle3]
 instructionListe = []
 command = 1
 execute = ""
-
-def routine():
-    send("joint 1 50\n")
-    send("joint 2 60\n")
 
 def write():      
 
@@ -140,9 +137,9 @@ def write():
         send(cmd2)
         send(cmd3)
         
-        instructionListe.append(" " + cmd1)
-        instructionListe.append(" " + cmd2)
-        instructionListe.append(" " + cmd3)
+#        instructionListe.append(" " + cmd1)
+#        instructionListe.append(" " + cmd2)
+#        instructionListe.append(" " + cmd3)
         
     def reset(event):
         listeMoteur1[0] = 0
@@ -235,8 +232,11 @@ def write():
             
             routine.insert(x,"x")
             
+    def loop():
+        return loopRoutine.get()
+
     def play(event):
-        
+
         x = routine.search("x","1.0", stopindex=END)
         
         for index, inst in enumerate(instructionListe):
@@ -245,6 +245,22 @@ def write():
             else:
                 execute = inst
                 send(execute)
+                time.sleep(3)
+
+        varLoop = loop()
+
+        if varLoop == 1:
+            play
+
+
+                
+    def execute(event):
+        x = routine.search("x","1.0", stopindex=END)
+        print(x)
+        print(instructionListe)
+    
+        print(instructionListe[int(float(x))-1])        
+        send(instructionListe[int(float(x))-1])
             
     #-------------moteur 1-------------
     Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
@@ -294,38 +310,38 @@ def write():
     #-------------Routine---------------
     
     routine = Text(root, height = 10, width = 20)
-    routine.place(x = 520, y = 4)
+    routine.place(x = 585, y = 4)
     
     butUp = Button(root, text="UP")
     butUp.bind("<Button-1>", up)
-    butUp.grid(row=0, column = 5, sticky = E, padx = 4, pady = 4)
+    butUp.place(x = 485, y = 4)
     
     butDown = Button(root, text="DOWN")
     butDown.bind("<Button-1>", down)
-    butDown.grid(row=1, column = 5, sticky = E, padx = 4, pady = 4)
+    butDown.place(x = 485, y = 36)
     
     butAdd = Button(root, text = "ADD")
     butAdd.bind("<Button-1>", add)
-    butAdd.grid(row=2, column = 5, sticky = E, padx = 4, pady = 4)
+    butAdd.place(x = 485, y = 68)
     
     butDelete = Button(root, text = "DELETE")
     butDelete.bind("<Button-1>", delete)
-    butDelete.grid(row=3, column = 5, sticky = E, padx = 4, pady = 4)
+    butDelete.place(x = 485, y = 100)
     
     butReplace = Button(root, text = "REPLACE")
     butReplace.bind("<Button-1>", replace)
-    butReplace.grid(row=4, column = 5, sticky = E, padx = 4, pady = 4)
+    butReplace.place(x = 485, y = 132)
     
     butRun = Button(root, text = "PLAY")
     butRun.bind("<Button-1>", play)
-    butRun.place(x = 520, y = 170)
+    butRun.place(x = 485, y = 164)
     
     butExecute = Button(root, text = "EXECUTE")
-    butExecute.bind("<Button-1>", send)
-    butExecute.place(x = 580, y = 170)
+    butExecute.bind("<Button-1>", execute)
+    butExecute.place(x = 485, y = 196)
     
     instructEntry = Entry(root)
-    instructEntry.grid(row=5, column = 5, sticky = E, padx = 4, pady = 4)
+    instructEntry.place(x = 585, y = 160)
     
     routine.insert(INSERT, "x")
     
@@ -343,7 +359,12 @@ def write():
     automaticChoice = BooleanVar()
     auto = Checkbutton(root,text="automatic send", variable=automaticChoice, command=automatic)
     auto.grid(row=0,column=4, padx=4, pady=4, sticky=W)
-    
+
+    # -------------Loop Routine----------
+    loopRoutine = BooleanVar()
+    loopRout = Checkbutton(root,text="Loop", variable=loopRoutine, command=loop)
+    loopRout.grid(row=0, column = 5, pady= 4, sticky=W)
+
     #-------------Reset-------------------
     
     resetButton = Button(root,text="reset")
@@ -357,29 +378,33 @@ def write():
 
 def read():
     pass
-#    while 1:
-#        cmd_read = ser_read.readline()
-#        print(cmd_read.decode('utf-8'))
+#   while 1:
+  #      cmd_read = ser_read.readline()
+  #      print(cmd_read.decode('utf-8'))
         
 def send(cmd_write):
     pass
-#    ser_write.write(cmd_write.encode())
-#    print(cmd_write)
+ #   if cmd_write[0] == " ":
+  #      cmd_write = cmd_write[1:]
+   # else:
+ #       pass
+ #   ser_write.write(cmd_write.encode())
+ #   print(cmd_write)
 
 
 root = Tk()
-root.geometry("750x200")
-
-t1_write = Thread(target = write)
+root.geometry("750x250")
+write()
+#t1_write = Thread(target = write)
 t2_read = Thread(target = read)
 
-t1_write.start()
+#t1_write.start()
 t2_read.start()
 
 root.mainloop()
 root.destroy()
 
-t1_write.join()
+#t1_write.join()
 #t2_read.join()
 
 
