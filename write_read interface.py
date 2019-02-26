@@ -380,17 +380,17 @@ def send(cmd_write):
 
 root = Tk()
 root.geometry("750x250")
-
-t1_write = Thread(target = write)
+write()
+#t1_write = Thread(target = write)
 t2_read = Thread(target = read)
 
-t1_write.start()
+#t1_write.start()
 t2_read.start()
 
 root.mainloop()
 root.destroy()
 
-t1_write.join()
+#t1_write.join()
 #t2_read.join()
 
 
