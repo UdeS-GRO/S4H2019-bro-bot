@@ -20,7 +20,7 @@ public:
 	// *********************************************
 	// **** Class constructor and destructor ****
 
-	Axis(uint8_t ID, uint32_t baud, int new_model = 350, int MinSoft = 0, int MaxSoft = 359);
+	Axis(uint8_t ID, uint32_t baud, int new_model = 350, int MinSoft = -20, int MaxSoft = 359);
 	~Axis();
 
 

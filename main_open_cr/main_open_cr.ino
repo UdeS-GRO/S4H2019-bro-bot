@@ -40,10 +40,10 @@ void setup()
     
     /* Axis creation*/
     Axis_table[0] = NULL; //There is no axis 0
-    Axis_table[1] = new Axis(1,57600,250); 
-    Axis_table[2] = new Axis(2,57600,350);
-    Axis_table[3] = new Axis(3,57600,250);  
-
+    Axis_table[1] = new Axis(1,57600,250,0,359); 
+    Axis_table[2] = new Axis(2,57600,350,25,250);
+    Axis_table[3] = new Axis(3,57600,250);
+    
     /*Init for the torque control*/
     Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
@@ -176,7 +176,7 @@ void read_serial(void)
          }
         else if(cmd[0] == "Pos")
          {
-            axis->getPosition();
+            Serial.print(axis->getPosition());
          }
         else if(cmd[0] == "Move")
          {
@@ -230,13 +230,12 @@ void read_serial(void)
          {
             int goalpos = cmd[2].toInt();
             Serial.println(goalpos);
-  
             if(goalpos > axis->getPosition())
             {
               axis->moveAtSpeed("100");
               while(1)
               {
-                if(axis->getPosition() >= (goalpos-2)||axis->getPosition() >= axis->MaxSoftlimit)||axis->getPosition()<= MinSoftlimit)
+                if((axis->getPosition() >= (goalpos-2))||(axis->getPosition() >= axis->MaxSoftlimit))
                 {
                    axis->moveAtSpeed("0");
                    break;
@@ -248,7 +247,7 @@ void read_serial(void)
               axis->moveAtSpeed("-100");
               while(1)
               {
-                if(axis->getPosition() <= (goalpos+2)||axis->softLimit||axis->getPosition() >= axis->MaxSoftlimit)||axis->getPosition()<= MinSoftlimit)
+                if(axis->getPosition() <= (goalpos+2)||axis->getPosition()< axis->MinSoftlimit)
                 {
                    axis->moveAtSpeed("0");
                    break;
@@ -263,15 +262,16 @@ void read_serial(void)
         {
           axis->torqueControlEnable = true;
         }
-    }    
+    } 
+    }   
 }
 void convertAngle(String* cmd)
-{ 
+{ /*
         int temp = cmd[1].toInt();
         temp= temp*4095/360;
         cmd[1] = String(temp); 
 
-        else if (cmd[0] == "torque_control_disable")
+        if (cmd[0] == "torque_control_disable")
         {
           axis->torqueControlEnable = false;
         }
@@ -281,12 +281,12 @@ void convertAngle(String* cmd)
             dynamixel_command(cmd);
           }
         
-      }
+      
       else 
       {
          dynamixel_command(cmd);
       }
-    }
+    }*/
 
 }
 
