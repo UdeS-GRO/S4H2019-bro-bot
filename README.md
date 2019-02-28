@@ -12,3 +12,8 @@ The Bro-Bot is a 3 degrees of freedom robot arm with a gripper at its end. The r
 
 The team: 
 We are at Université de Sherbrooke in the robotic engineering program. The team is composed of Tristan Dumais, Philippe Doucerain, Jean-Michel Lemaire, Maxime Lamoureux, Marc-André Martel and Étienne Villemure
+
+
+## Start the project 
+All materials to acquired and all the necessary softfwares to download can be found in this Github wiki in the section **Getting started!!**
+
