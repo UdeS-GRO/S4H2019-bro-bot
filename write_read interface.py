@@ -379,8 +379,8 @@ def write():
 def read():
     pass
 #   while 1:
-  #      cmd_read = ser_read.readline()
-  #      print(cmd_read.decode('utf-8'))
+        cmd_read = ser_read.readline()
+        print(cmd_read.decode('utf-8'))
         
 def send(cmd_write):
     pass
