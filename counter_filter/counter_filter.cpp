@@ -5,7 +5,6 @@
 */
 
 #include "counter_filter.h"
-#include "arduino.h"
 
 
 counter_filter::counter_filter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)

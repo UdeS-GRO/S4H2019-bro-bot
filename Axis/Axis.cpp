@@ -8,9 +8,7 @@
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
  * Date: 06 Fevrier 2019 (creation)
- * Description: Implementation des methodes des classes decrites dans
- *    forme.h. Les methodes de la classe Forme ne doivent pas etre
- *    modifiees. Ce fichier fait partie de la distribution de Graphicus.
+ * Description: 
 ********/
 
 #include "Axis.h"
