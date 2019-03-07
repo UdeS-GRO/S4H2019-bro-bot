@@ -24,6 +24,7 @@
 //Global variables
 String cmd[64]={"begin","57600"};
 String cmd_tx[20];              //String to send to the motor after computing
+
 Axis *Axis_table[NUMBER_OF_AXIS];
 
 
@@ -53,7 +54,6 @@ void setup()
     /*Init for the torque control*/
     Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
-
 }
 
 void loop() 
