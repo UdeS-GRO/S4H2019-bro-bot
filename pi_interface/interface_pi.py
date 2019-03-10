@@ -222,7 +222,7 @@ def add(event):
     routine.delete("1.0",END)
 
     for inst in instructionListe:
-        routine.insert(END, inst + "\n")
+        routine.insert(END, inst) #+ "\n")
 
     routine.insert(x,"x")
 
@@ -445,6 +445,7 @@ def send(cmd_write):
 
     with send_lock:
         print(cmd_write)
+
 
 
 
