@@ -2,7 +2,7 @@ import unittest
 import sys
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
 
-sys.path.append('../')
+#sys.path.append('../')
 import interface
 
 rx_line = []
