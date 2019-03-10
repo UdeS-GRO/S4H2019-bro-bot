@@ -56,7 +56,6 @@ def leftKeyM1(event):
         listeMoteur1[0] -= 10
         moteur1Entry.insert(0,listeMoteur1[0])
 
-
 def leftKeyM2(event):
     '''  '''
     autoState = automatic()
@@ -158,10 +157,6 @@ def sendAngle(event):
     send(cmd1)
     send(cmd2)
     send(cmd3)
-
-#        instructionListe.append(" " + cmd1)
-#        instructionListe.append(" " + cmd2)
-#        instructionListe.append(" " + cmd3)
 
 def reset(event):
     '''  '''
