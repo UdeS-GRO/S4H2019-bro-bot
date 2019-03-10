@@ -13,13 +13,14 @@ import serial
 if __name__ == '__main__':
     ser_write = serial.Serial("/dev/ttyACM1", 9600)
     ser_read = serial.Serial("/dev/ttyACM1", 9600)
-    isTEST = False
+
 else:
     print(" Interface is imported: serial function will be overwritten")
     # Should not be called in test
     ser_write = None
     ser_read = None
-    isTEST = True
+
+
 
 angle1 = 0
 angle2 = 0
@@ -457,7 +458,7 @@ if __name__ == '__main__':
     t2_read.start()
     #t1_write.start()
 
-
+    send = dummy_send
     root.mainloop()
     root.destroy()
 
