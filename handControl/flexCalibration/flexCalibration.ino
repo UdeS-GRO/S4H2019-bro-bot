@@ -1,3 +1,9 @@
+/* Will Donaldson
+ * 1/11/17
+ * For detailed instructions on how to program the Arduino Lilypad without FTDI: 
+ * https://www.instructables.com/id/How-to-upload-codes-to-Lilypad-Arduino-Without-FTD/
+ */
+ 
 int fingerPins[1]={A0};         //order of finger connections from thumb to pinky (ie: A0=thumb, A1=index,...etc.)
 int fingerVals[1];                              //stores value of flex sensor on each finger
 const char *names[1]={"Thumb: "};

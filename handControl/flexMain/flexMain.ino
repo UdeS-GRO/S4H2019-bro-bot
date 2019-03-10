@@ -1,3 +1,21 @@
+/*  Will Donaldson 
+ *  1/11/17
+ *  
+ *  Instructions: 
+ *  YouTube Video:
+ *  
+ *  Build flex glove first, then run Flex_Glove_Calibration.ino. Copy output into line 31 before running this code.
+ *  
+ *  Wiring Convention:   
+ *  Finger  | Lilypad Pin         
+ *  Thumb   | D5      
+ *  Index   | D6         
+ *  Middle  | D7         
+ *  Ring    | D8         
+ *  Pinky   | D9  
+ *  
+ */
+ 
 #include <Servo.h>
 Servo thumb;
 
