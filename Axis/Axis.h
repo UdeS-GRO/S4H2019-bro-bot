@@ -36,7 +36,7 @@ public:
 	int tews;
 	uint8_t ID;
 	int model;
-	bool debugMode = 0;
+	bool debugMode = 1;
 
 
 	// ********************************
@@ -57,6 +57,8 @@ public:
 	float 	Sts_ActualVelocity;
 	bool 	Sts_Moving;
 	bool 	Sts_AtPosition;
+	bool 	Sts_Homed;
+	bool 	Sts_Homing;
 
 
 	// ****************************
@@ -77,6 +79,7 @@ public:
 	// **** Moving Methods ****
 
 	void Zero();
+	void HomeRequest(bool *HomeSW);
 	void moveTo(String cmd);
 	void moveAtSpeed(String cmd);
 
@@ -100,6 +103,8 @@ public:
 	int getTorque();
 	int	getVelocity();
 	int	getMovingStatus();
+
+	void readStatus();
 	
 
 	// ****************************************
@@ -114,6 +119,7 @@ private:
 	unsigned long 	blink_timer;
 	const char 		*log = NULL;
 	bool 			result = false;
+	float			HomeOffset = 0;
 
 
 	// *******************************

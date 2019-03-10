@@ -35,6 +35,10 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	MaxSoftlimit = MaxSoft;
 	MinSoftlimit = MinSoft;
 
+	Sts_Homed 	= 0;
+	Sts_Homing	= 0;
+	HomeOffset 	= 0;
+
 	torque_counter_filter = NULL;
 	moving_counter_filter = NULL;
 
@@ -44,7 +48,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	}
 	else
 	{
-		Serial.println("New model unknow. Will consider it to be 350");
+		Serial.println("New model unknown. We'll consider it to be 350");
 		model = 350;
 	}
 
@@ -166,6 +170,27 @@ void Axis::Zero()
 		{
 			Serial.println(log);
 		}
+	}
+}
+
+void Axis::HomeRequest(bool *HomeSW)
+{
+	Sts_Homed = 0;
+	HomeOffset = 0;
+	writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
+	
+	moveAtSpeed(String(-50));
+
+	Sts_Homing = 1;
+
+	if(HomeSW)
+	{
+		moveAtSpeed(String(0));
+		HomeOffset = 0 - Sts_ActualPosition;
+		writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
+
+		Sts_Homing = 0;
+		Sts_Homed = 1;
 	}
 }
 
@@ -346,6 +371,17 @@ void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 }
 
 // **************** Read Paramters Methods ****************
+
+void Axis::readStatus()
+{
+	int dummy = 0;
+	dummy = getPosition();
+	dummy = getCurrent();
+	dummy = getTorque();
+	dummy = getVelocity();
+	dummy = getMovingStatus();
+
+}
 
 int Axis::getPosition()
 {
