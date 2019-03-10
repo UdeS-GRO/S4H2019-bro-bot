@@ -28,6 +28,19 @@ String cmd_tx[20];              //String to send to the motor after computing
 Axis *Axis_table[NUMBER_OF_AXIS];
 
 
+// Hard Limit Switches inputs declaration
+int inMinLS01 = 2;
+int inMaxLS01 = 3;
+int inMinLS02 = 4;
+int inMaxLS02 = 5;
+int inMinLS03 = 6;
+int inMaxLS03 = 7;
+
+// Limit Switches input status
+bool MinLS[NUMBER_OF_AXIS];
+bool MaxLS[NUMBER_OF_AXIS];
+
+
 //Function declarations
 void read_serial(void);
 void read_radio(void);
@@ -54,10 +67,27 @@ void setup()
     /*Init for the torque control*/
     Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
+
+    // Pinout Attribution for Limit Swtiches
+    pinMode(inMinLS01, INPUT);
+    pinMode(inMaxLS01, INPUT);
+    pinMode(inMinLS02, INPUT);
+    pinMode(inMaxLS02, INPUT);
+    pinMode(inMinLS03, INPUT);
+    pinMode(inMaxLS03, INPUT);
 }
 
 void loop() 
 {
+  // Limits Switch digital Read
+  MinLS[1] = digitalRead(inMinLS01);
+  MinLS[2] = digitalRead(inMinLS02);
+  MinLS[3] = digitalRead(inMinLS03);
+  MaxLS[1] = digitalRead(inMaxLS01);
+  MaxLS[2] = digitalRead(inMaxLS02);
+  MaxLS[3] = digitalRead(inMaxLS03);
+
+//  bool test = Axis_table[1]->HomeRequest(&MinLS[1]); // Test homing Command
   //Read message
   read_serial();
   read_radio();
