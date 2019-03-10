@@ -18,6 +18,7 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         self.assertEqual(interface_pi.instructionListe[0]," commande 1 007")
         self.clear_entry(interface_pi.instructEntry)
+        interface_pi.instructionListe.pop()
 
 
     def test_add_routine_list(self):
