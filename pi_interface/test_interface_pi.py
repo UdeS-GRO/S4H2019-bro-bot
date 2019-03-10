@@ -7,7 +7,10 @@ import interface_pi
 
 rx_line = []
 
+
 class TestInterface(unittest.TestCase):
+
+    # Instruction list
 
     def test_add_instruction_list(self):
         #Setup the test
@@ -40,6 +43,9 @@ class TestInterface(unittest.TestCase):
         self.clear_entry(interface_pi.instructEntry)
         interface_pi.instructionListe.pop()
 
+    #======= Motor buttons =======
+
+    # Motor 1
     def test_leftKeyM1(self):
         # Setup the test
         self.update_events()
@@ -136,6 +142,7 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         interface_pi.moteur1Entry.delete(0,10)
 
+    # Motor 2
     def test_leftKeyM2(self):
         # Setup the test
         self.update_events()
@@ -230,6 +237,7 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         interface_pi.moteur2Entry.delete(0,10)
 
+    # Motor 3
     def test_leftKeyM3(self):
         # Setup the test
         self.update_events()
@@ -326,6 +334,8 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         interface_pi.moteur3Entry.delete(0, 10)
 
+
+    #=======  =======
     def update_events(self):
         interface_pi.root.update()
         interface_pi.root.update_idletasks()
@@ -338,6 +348,8 @@ class TestInterface(unittest.TestCase):
 def dummy_send( cmd_write):
     rx_line.append(cmd_write)
     #print("dummy_serial:" + rx_line[-1])
+
+interface_pi.send = dummy_send
 
 if __name__ == '__main__':
     interface_pi.send = dummy_send
