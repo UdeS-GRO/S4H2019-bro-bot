@@ -28,7 +28,7 @@ class TestInterface(unittest.TestCase):
         interface_pi.instructEntry.insert(END, test_str)
         interface_pi.butAdd.event_generate("<Button-1>",when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.instructionListe[0]," commande 1 007")
+        self.assertEqual(interface_pi.instructionListe[0]," commande 1 008")
         self.clear_entry(interface_pi.instructEntry)
         interface_pi.instructionListe.pop()
 
