@@ -10,13 +10,18 @@ rx_line = []
 class TestInterface(unittest.TestCase):
 
     def test_add_instruction_list(self):
+        #Setup the test
         test_str = "commande 1 007"
         self.update_events()
 
         interface_pi.instructEntry.insert(END, test_str)
         interface_pi.butAdd.event_generate("<Button-1>",when="tail")
         self.update_events()
+
+        # Test
         self.assertEqual(interface_pi.instructionListe[0]," commande 1 007")
+
+        # Clear test
         self.clear_entry(interface_pi.instructEntry)
         interface_pi.instructionListe.pop()
 
@@ -32,7 +37,7 @@ class TestInterface(unittest.TestCase):
         # Test
         self.assertEqual(interface_pi.routine.get('1.0',END),"x commande 1 008\n")
 
-        #Clear test
+        # Clear test
         self.clear_entry(interface_pi.instructEntry)
         interface_pi.instructionListe.pop()
 
