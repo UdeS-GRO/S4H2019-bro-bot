@@ -28,8 +28,8 @@ int flexPins[]={A0};            //order of finger connections from thumb to pink
  *  Columns, from left to right correspond from the thumb to pinky. 
  *  Values from the output of Flex_Glove_Calibration.ino
  */
-int flexsensorRange[2][1]= {{492},
-                            {632}};  
+int flexsensorRange[2][1]= {{359},
+                            {631}};  
                             
 void setup() {
   Serial.begin(9600);                        //If you have issues with the baudrate and serial monitor see the Read Me file. 
