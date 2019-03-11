@@ -10,6 +10,34 @@ rx_line = []
 
 class TestInterface(unittest.TestCase):
 
+    def setUp(self):
+
+        while len(interface_pi.instructionListe) > 0:
+            interface_pi.instructionListe.pop()
+
+        self.clear_text(interface_pi.routine)
+        self.clear_entry(interface_pi.instructEntry)
+        self.update_events()
+
+        interface_pi.routine.insert(INSERT, "x")
+        self.update_events()
+
+        interface_pi.listeMoteur1[0] = 0
+        interface_pi.listeMoteur2[0] = 0
+        interface_pi.listeMoteur3[0] = 0
+
+        interface_pi.moteur1Entry.delete(0, 10)
+        interface_pi.moteur2Entry.delete(0, 10)
+        interface_pi.moteur3Entry.delete(0, 10)
+        self.update_events()
+
+        interface_pi.moteur1Entry.insert(0, 0)
+        interface_pi.moteur2Entry.insert(0, 0)
+        interface_pi.moteur3Entry.insert(0, 0)
+        interface_pi.auto.deselect()
+        self.update_events()
+
+
     #======= Motor buttons =======
 
     # ****** Motor 1 ******
@@ -32,11 +60,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur1Entry.get(), '-20', "La valeur -20 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.moteur1Entry.delete(0,10)
-
     def test_RightKeyM1(self):
         # Setup the test
         self.update_events()
@@ -56,11 +79,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur1Entry.get(), '20', "La valeur 20 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.moteur1Entry.delete(0,10)
-
     def test_leftKeyM1_automatic(self):
         # Setup the test
         self.update_events()
@@ -77,13 +95,6 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         self.assertEqual(rx_line[-1], 'moveto 1 -20\n', "La commande envpoyé au OpenCr n'est pas  -20 pour le moteur 1")
         self.update_events()
-
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.auto.deselect()
-        self.update_events()
-        interface_pi.moteur1Entry.delete(0,10)
 
     def test_RightKeyM1_automatic(self):
         # Setup the test
@@ -102,12 +113,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(rx_line[-1], 'moveto 1 20\n', "La commande envpoyé au OpenCr n'est pas  20 pour le moteur 1")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.auto.deselect()
-        self.update_events()
-        interface_pi.moteur1Entry.delete(0,10)
 
     # ****** Motor 2 ******
     def test_leftKeyM2(self):
@@ -128,10 +133,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur2Entry.get(), '-20', "La valeur -20 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-        interface_pi.listeMoteur2[0] = 0
-        interface_pi.moteur2Entry.delete(0,10)
-
     def test_RightKeyM2(self):
         # Setup the test
         self.update_events()
@@ -150,11 +151,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur2Entry.get(), '20', "La valeur -20 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur2[0] = 0
-        interface_pi.moteur2Entry.delete(0,10)
-
     def test_leftKeyM2_automatic(self):
         # Setup the test
         self.update_events()
@@ -170,13 +166,6 @@ class TestInterface(unittest.TestCase):
         interface_pi.left2Button.event_generate("<Button-1>", when="tail")
         self.update_events()
         self.assertEqual(rx_line[-1], 'moveto 2 -20\n', "La commande envpoyé au OpenCr n'est pas  -20 pour le moteur 1")
-        self.update_events()
-
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.auto.deselect()
-        interface_pi.moteur2Entry.delete(0,10)
         self.update_events()
 
     def test_RightKeyM2_automatic(self):
@@ -195,13 +184,6 @@ class TestInterface(unittest.TestCase):
         self.update_events()
         self.assertEqual(rx_line[-1], 'moveto 2 20\n', "La commande envpoyé au OpenCr n'est pas  20 pour le moteur 2")
         self.update_events()
-
-        # Clear test
-
-        interface_pi.listeMoteur2[0] = 0
-        interface_pi.auto.deselect()
-        self.update_events()
-        interface_pi.moteur2Entry.delete(0,10)
 
     # ****** Motor 3 ******
     def test_leftKeyM3(self):
@@ -222,11 +204,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur3Entry.get(), '-20', "La valeur -20 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur3[0] = 0
-        interface_pi.moteur3Entry.delete(0,10)
-
     def test_RightKeyM3(self):
         # Setup the test
         self.update_events()
@@ -245,11 +222,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur3Entry.get(), '20', "La valeur 20 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur3[0] = 0
-        interface_pi.moteur3Entry.delete(0,10)
-
     def test_leftKeyM3_automatic(self):
         # Setup the test
         self.update_events()
@@ -265,13 +237,6 @@ class TestInterface(unittest.TestCase):
         interface_pi.left3Button.event_generate("<Button-1>", when="tail")
         self.update_events()
         self.assertEqual(rx_line[-1], 'moveto 3 -20\n', "La commande envpoyé au OpenCr n'est pas  -20 pour le moteur 3")
-        self.update_events()
-
-        # Clear test
-
-        interface_pi.listeMoteur3[0] = 0
-        interface_pi.auto.deselect()
-        interface_pi.moteur3Entry.delete(0,10)
         self.update_events()
 
     def test_RightKeyM3_automatic(self):
@@ -293,12 +258,6 @@ class TestInterface(unittest.TestCase):
                          "La commande envpoyé au OpenCr n'est pas  20 pour le moteur 1")
         self.update_events()
 
-        # Clear test
-
-        interface_pi.listeMoteur3[0] = 0
-        interface_pi.auto.deselect()
-        self.update_events()
-        interface_pi.moteur3Entry.delete(0, 10)
 
     # ****** other motors button ******
     def test_automatic(self):
@@ -312,10 +271,6 @@ class TestInterface(unittest.TestCase):
         interface_pi.auto.select()
         self.update_events()
         self.assertTrue(interface_pi.automatic(), "Automatic send n'est pas coché alors qu'il devrait l'être")
-
-        # Clear test
-        interface_pi.auto.deselect()
-        self.update_events()
 
     def test_sendAngle(self):
         # Setup the test
@@ -342,21 +297,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(rx_line[-2], "moveto 2 200\n","La mauvaise commande est envoyée au moteur 2")
         self.assertEqual(rx_line[-1], "moveto 3 300\n","La mauvaise commande est envoyée au moteur 3")
 
-        # Clear test
-
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.listeMoteur2[0] = 0
-        interface_pi.listeMoteur3[0] = 0
-
-        interface_pi.moteur1Entry.delete(0,10)
-        interface_pi.moteur2Entry.delete(0,10)
-        interface_pi.moteur3Entry.delete(0,10)
-
-        interface_pi.moteur1Entry.insert(0, 0)
-        interface_pi.moteur2Entry.insert(0, 0)
-        interface_pi.moteur3Entry.insert(0, 0)
-        self.update_events()
-
     def test_reset(self):
         # Setup the test
         self.update_events()
@@ -382,8 +322,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur2Entry.get(), '0')
         self.assertEqual(interface_pi.moteur3Entry.get(), '0')
 
-        # Clear test
-        self.update_events()
 
 
     # ======= Instruction list =======
@@ -400,10 +338,6 @@ class TestInterface(unittest.TestCase):
         # Test
         self.assertEqual(interface_pi.instructionListe[0]," commande 1 007")
 
-        # Clear test
-        self.clear_entry(interface_pi.instructEntry)
-        interface_pi.instructionListe.pop()
-
     def test_add_routine_list(self):
         #Setup the test
         test_str = "commande 1 008"
@@ -415,11 +349,10 @@ class TestInterface(unittest.TestCase):
         # Test
         self.assertEqual(interface_pi.routine.get('1.0',END),"x commande 1 008\n\n")
 
-        # Clear test
-        self.clear_entry(interface_pi.instructEntry)
-        interface_pi.instructionListe.pop()
-
     def test_up(self):
+        # Clear test
+        self.update_events()
+
         #Setup the test
         test_str_1 = " commande 1 008\n"
         test_str_2 = " stop_cmd 5 701\n"
@@ -430,7 +363,7 @@ class TestInterface(unittest.TestCase):
         interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
         self.update_events()
         interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
-        interface_pi.command += 1
+        interface_pi.command = 2
         self.update_events()
 
 
@@ -447,49 +380,64 @@ class TestInterface(unittest.TestCase):
         self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
         self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
 
+    def test_down(self):
 
-        # Clear test
-        interface_pi.instructionListe.pop()
-        interface_pi.instructionListe.pop()
-        self.clear_text(interface_pi.routine)
+        #Setup the test
+        test_str_1 = " commande h 450"
+        test_str_2 = " start_cmd 3 819"
+        self.update_events()
+        interface_pi.routine.delete("1.0", END)
+        interface_pi.instructionListe = [test_str_1, test_str_2]
+
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0] + "\n")
+        self.update_events()
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1] + "\n")
         interface_pi.command = 1
         self.update_events()
 
-    def test_down(self):
-        #Setup the test
-        test_str_1 = " commande 1 008\n"
-        test_str_2 = " stop_cmd 5 701\n"
+
+        interface_pi.butDown.event_generate("<Button-1>",when="tail")
+        self.update_events()
+
+        # First test: Verify if the x move downward
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), " commande h 450\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), "x start_cmd 3 819\n\n")
+
+        #Second test: Verify that the x could not go lower than the last position
+        interface_pi.butDown.event_generate("<Button-1>",when="tail")
+        self.update_events()
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), " commande h 450\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), "x start_cmd 3 819\n\n")
+
+    def test_delete(self):
+        # Setup the test
+        test_str_1 = " commande h 798"
+        test_str_2 = " start_cmd 3 125"
+        test_str_3 = " gazon t 112"
+
         self.update_events()
         interface_pi.routine.delete("1.0", END)
-        interface_pi.instructionListe = [test_str_1, test_str_2]
+        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
-        self.update_events()
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
-        interface_pi.command += 1
-        self.update_events()
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0] + "\n")
 
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1] + "\n")
+        interface_pi.command = 2
 
-        interface_pi.butUp.event_generate("<Button-1>",when="tail")
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2] + "\n")
         self.update_events()
 
-        # First test: Verify if the x move upward
-        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
-        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
-
-        #Second test: Verify that the x could not go higher than first position
-        interface_pi.butUp.event_generate("<Button-1>",when="tail")
-        self.update_events()
-        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
-        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
-
-
-        # Clear test
-        interface_pi.instructionListe.pop()
-        interface_pi.instructionListe.pop()
-        self.clear_text(interface_pi.routine)
+        interface_pi.butDelete.event_generate("<Button-1>", when="tail")
         self.update_events()
 
+        # First test: Verify if the second command has been removed
+        self.assertEqual(interface_pi.routine.get('1.0', '2.0'), " commande h 798\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), "x gazon t 112\n\n")
+
+        # Second test: Verify if the last command has been removed
+        interface_pi.butDelete.event_generate("<Button-1>", when="tail")
+        self.update_events()
+        self.assertEqual(interface_pi.routine.get('1.0', '2.0'), "x commande h 798\n")
 
     #======= Miscellaneous =======
     def update_events(self):

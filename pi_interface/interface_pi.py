@@ -237,7 +237,10 @@ def delete(event):
         for inst in instructionListe:
             routine.insert(END, inst + "\n")
 
-        routine.insert(x,"x")
+        if len(instructionListe) <= 1:
+            routine.insert("1.0", "x")
+        else:
+            routine.insert(x,"x")
 
 def replace(event):
     '''  '''
