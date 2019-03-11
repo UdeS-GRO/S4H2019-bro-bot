@@ -385,6 +385,7 @@ class TestInterface(unittest.TestCase):
         # Clear test
         self.update_events()
 
+
     # ======= Instruction list =======
 
     def test_add_instruction_list(self):
@@ -412,11 +413,83 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test
-        self.assertEqual(interface_pi.routine.get('1.0',END),"x commande 1 008\n")
+        self.assertEqual(interface_pi.routine.get('1.0',END),"x commande 1 008\n\n")
 
         # Clear test
         self.clear_entry(interface_pi.instructEntry)
         interface_pi.instructionListe.pop()
+
+    def test_up(self):
+        #Setup the test
+        test_str_1 = " commande 1 008\n"
+        test_str_2 = " stop_cmd 5 701\n"
+        self.update_events()
+        interface_pi.routine.delete("1.0", END)
+        interface_pi.instructionListe = [test_str_1, test_str_2]
+
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        self.update_events()
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.command += 1
+        self.update_events()
+
+
+        interface_pi.butUp.event_generate("<Button-1>",when="tail")
+        self.update_events()
+
+        # First test: Verify if the x move upward
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
+
+        #Second test: Verify that the x could not go higher than first position
+        interface_pi.butUp.event_generate("<Button-1>",when="tail")
+        self.update_events()
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
+
+
+        # Clear test
+        interface_pi.instructionListe.pop()
+        interface_pi.instructionListe.pop()
+        self.clear_text(interface_pi.routine)
+        interface_pi.command = 1
+        self.update_events()
+
+    def test_down(self):
+        #Setup the test
+        test_str_1 = " commande 1 008\n"
+        test_str_2 = " stop_cmd 5 701\n"
+        self.update_events()
+        interface_pi.routine.delete("1.0", END)
+        interface_pi.instructionListe = [test_str_1, test_str_2]
+
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        self.update_events()
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.command += 1
+        self.update_events()
+
+
+        interface_pi.butUp.event_generate("<Button-1>",when="tail")
+        self.update_events()
+
+        # First test: Verify if the x move upward
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
+
+        #Second test: Verify that the x could not go higher than first position
+        interface_pi.butUp.event_generate("<Button-1>",when="tail")
+        self.update_events()
+        self.assertEqual( interface_pi.routine.get('1.0', '2.0'), "x commande 1 008\n")
+        self.assertEqual(interface_pi.routine.get('2.0', END), " stop_cmd 5 701\n\n")
+
+
+        # Clear test
+        interface_pi.instructionListe.pop()
+        interface_pi.instructionListe.pop()
+        self.clear_text(interface_pi.routine)
+        self.update_events()
+
 
     #======= Miscellaneous =======
     def update_events(self):
@@ -425,6 +498,10 @@ class TestInterface(unittest.TestCase):
 
     def clear_entry(self,entry):
         entry.delete(0, END)
+        self.update_events()
+
+    def clear_text(self,text):
+        text.delete("1.0", END)
         self.update_events()
 
 
