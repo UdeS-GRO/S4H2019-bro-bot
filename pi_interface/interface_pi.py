@@ -4,7 +4,7 @@
  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
-from threading import Thread,Condition,RLock
+from threading import Thread,Condition,RLock,Event
 
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
 import time
@@ -34,9 +34,10 @@ instructionListe = []
 command = 1
 execute = ""
 
-routine_cv = Condition()
+routine_event_cv = Event()
+routine_event_cv.set()
 send_lock = RLock()
-
+routine_cv_waiting_for_unlock = False
 root = Tk()
 root.geometry("750x250")
 
@@ -189,7 +190,6 @@ def up(event):
             x = routine.search("x",str(float(command)),stopindex=END)
             execute = instructionListe[int(float(x))-1]
 
-
 def down(event):
     '''  '''
 
@@ -214,11 +214,11 @@ def add(event):
 
     global command
     x = routine.search("x","1.0", stopindex=END)
-    instructionListe.insert(int(float(x)), " " + str(instructEntry.get()))
+    instructionListe.insert(int(float(x)), " " + str(instructEntry.get())+"\n")
     routine.delete("1.0",END)
 
     for inst in instructionListe:
-        routine.insert(END, inst + "\n")
+        routine.insert(END, inst)
 
     routine.insert(x,"x")
 
@@ -235,7 +235,7 @@ def delete(event):
         routine.delete("1.0",END)
 
         for inst in instructionListe:
-            routine.insert(END, inst + "\n")
+            routine.insert(END, inst)
 
         if len(instructionListe) <= 1:
             routine.insert("1.0", "x")
@@ -276,17 +276,19 @@ def loop():
 
 def play():
     '''  '''
-    global routine_cv
+    global routine_event_cv
     x = routine.search("x","1.0", stopindex=END)
-
-    for index, inst in enumerate(instructionListe):
-        if index < int(float(x))-1:
-            pass
-        else:
-            execute = inst
-            send(execute)
-            with routine_cv:
-                routine_cv.wait(20)         #Wait the nolidge flag or wait 20 seconds
+    first_loop = True
+    while (loop() or first_loop):
+        first_loop = False
+        for index, inst in enumerate(instructionListe):
+            if index < int(float(x))-1:
+                pass
+            else:
+                execute = inst
+                send(execute)
+                routine_event_cv.clear()
+                routine_event_cv.wait(15)         #Wait the nolidge flag or wait 20 seconds
 
 
 def execute(event):
@@ -417,7 +419,7 @@ bouton.grid(row = 3, column = 0)
 def read():
     '''  '''
 #    pass
-    global routine_cv
+    global routine_event_cv
     while 1:
         cmd_read = ser_read.readline()
         cmd_read_decoded = cmd_read.decode('utf-8')
@@ -426,8 +428,7 @@ def read():
         
         if cmd_read_decoded[:len(cmd_read_decoded)-2] == 'nolidge':
             try:
-                with routine_cv:
-                    routine_cv.notify_all()
+                routine_event_cv.set()
 
             except RuntimeError:
                 print("No waiting task")
@@ -440,9 +441,9 @@ def send(cmd_write):
         cmd_write = cmd_write[1:]
     else:
         pass
-    ser_write.write(cmd_write.encode())
 
     with send_lock:
+        ser_write.write(cmd_write.encode())
         print(cmd_write)
 
 

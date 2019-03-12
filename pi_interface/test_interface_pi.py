@@ -1,11 +1,13 @@
 import unittest
 import sys
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
+from threading import Thread,Condition,RLock
 
 #sys.path.append('../')
 import interface_pi
 
 rx_line = []
+stop_thread =Condition()
 
 
 class TestInterface(unittest.TestCase):
@@ -35,7 +37,10 @@ class TestInterface(unittest.TestCase):
         interface_pi.moteur2Entry.insert(0, 0)
         interface_pi.moteur3Entry.insert(0, 0)
         interface_pi.auto.deselect()
+        interface_pi.loopRout.deselect()
         self.update_events()
+
+        interface_pi.play = old_play
 
 
     #======= Motor buttons =======
@@ -258,7 +263,6 @@ class TestInterface(unittest.TestCase):
                          "La commande envpoyé au OpenCr n'est pas  20 pour le moteur 1")
         self.update_events()
 
-
     # ****** other motors button ******
     def test_automatic(self):
         # Setup the test
@@ -323,7 +327,6 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(interface_pi.moteur3Entry.get(), '0')
 
 
-
     # ======= Instruction list =======
 
     def test_add_instruction_list(self):
@@ -336,7 +339,7 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test
-        self.assertEqual(interface_pi.instructionListe[0]," commande 1 007")
+        self.assertEqual(interface_pi.instructionListe[0]," commande 1 007\n")
 
     def test_add_routine_list(self):
         #Setup the test
@@ -383,15 +386,15 @@ class TestInterface(unittest.TestCase):
     def test_down(self):
 
         #Setup the test
-        test_str_1 = " commande h 450"
-        test_str_2 = " start_cmd 3 819"
+        test_str_1 = " commande h 450\n"
+        test_str_2 = " start_cmd 3 819\n"
         self.update_events()
         interface_pi.routine.delete("1.0", END)
         interface_pi.instructionListe = [test_str_1, test_str_2]
 
-        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0] + "\n")
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
         self.update_events()
-        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1] + "\n")
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
         interface_pi.command = 1
         self.update_events()
 
@@ -411,20 +414,19 @@ class TestInterface(unittest.TestCase):
 
     def test_delete(self):
         # Setup the test
-        test_str_1 = " commande h 798"
-        test_str_2 = " start_cmd 3 125"
-        test_str_3 = " gazon t 112"
+        test_str_1 = " commande h 798\n"
+        test_str_2 = " start_cmd 3 125\n"
+        test_str_3 = " gazon t 112\n"
 
         self.update_events()
-        interface_pi.routine.delete("1.0", END)
         interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0] + "\n")
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
 
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1] + "\n")
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
         interface_pi.command = 2
 
-        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2] + "\n")
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
         self.update_events()
 
         interface_pi.butDelete.event_generate("<Button-1>", when="tail")
@@ -437,7 +439,185 @@ class TestInterface(unittest.TestCase):
         # Second test: Verify if the last command has been removed
         interface_pi.butDelete.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.routine.get('1.0', '2.0'), "x commande h 798\n")
+        self.assertEqual(interface_pi.routine.get('1.0', END), "x commande h 798\n\n")
+
+    def test_replace(self):
+        # Setup the test
+        test_str_1 = " commande o 111\n"
+        test_str_2 = " start_cmd 9 222\n"
+        test_str_3 = " gazon t 452\n"
+        test_str_4 = "new_cmd 1"
+
+        self.update_events()
+        interface_pi.routine.delete("1.0", END)
+        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.command = 2
+
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+
+        interface_pi.instructEntry.insert(END, test_str_4)
+        self.update_events()
+
+        interface_pi.butReplace.event_generate("<Button-1>", when="tail")
+        self.update_events()
+
+        # First test: Verify if the second command has been replaced
+        self.assertEqual(interface_pi.routine.get('1.0', '2.0'), " commande o 111\n")
+        self.assertEqual(interface_pi.routine.get('2.0', '3.0'), "x new_cmd 1\n")
+        self.assertEqual(interface_pi.routine.get('3.0', END), " gazon t 452\n\n")
+
+    def test_execute(self):
+        # Setup the test
+        test_str_1 = " moveto 1 100\n"
+        test_str_2 = " moveto 2 90\n"
+
+        self.update_events()
+        interface_pi.routine.delete("1.0", END)
+        interface_pi.instructionListe = [test_str_1, test_str_2]
+
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.command = 2
+
+        self.update_events()
+
+        interface_pi.butExecute.event_generate("<Button-1>", when="tail")
+        self.update_events()
+
+        # First test: Verify if the command has been send
+        self.assertEqual(rx_line[-1], "moveto 2 90\n")
+
+    def test_play_thread(self):
+        #Setup the test
+
+        interface_pi.play = dummy_play
+
+        #First test: verify that the thread is active
+        interface_pi.butRun.event_generate("<Button-1>", when="tail")
+        self.update_events()
+        self.assertTrue(interface_pi.play_thread.t_play.isAlive())
+
+        #Second test: verify thath the thread is inactive
+        with stop_thread:
+            stop_thread.notify_all()
+        interface_pi.play_thread.t_play.join(1)
+        self.assertFalse(interface_pi.play_thread.t_play.isAlive())
+
+    def test_play(self):
+        # Setup the test
+        test_str_1 = " commande h 987\n"
+        test_str_2 = " start_cmd 3 654\n"
+        test_str_3 = " gazon t 321\n"
+
+        old_rx_line_len = len(rx_line)
+
+        self.update_events()
+        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
+        interface_pi.command = 1
+
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
+
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+
+        self.update_events()
+
+        # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test.start()
+
+        # Run
+        interface_pi.play()
+        t_test.join()
+
+    def loop_routine(self):
+        # Setup the test
+        test_str_1 = " commande h 987\n"
+        test_str_2 = " start_cmd 3 654\n"
+        test_str_3 = " gazon t 321\n"
+        interface_pi.loopRout.select()
+        self.update_events()
+
+        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
+        interface_pi.command = 1
+
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
+
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+
+        self.update_events()
+        print("rendu ici 1" )
+        # ** First sequence **
+        old_rx_line_len = len(rx_line)
+        # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test.start()
+
+        # Run
+        interface_pi.play()
+        t_test.join()
+
+        print("rendu ici 2")
+        # ** Second sequence **
+        old_rx_line_len = len(rx_line)
+        # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test.start()
+
+        # Run
+        t_test.join()
+        print("rendu ici 3")
+
+        # ** Uncheck the loop : first sequence**
+        interface_pi.loopRout.deselect()
+        self.update_events()
+        print("rendu ici 4")
+        old_rx_line_len = len(rx_line)
+        # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test.start()
+
+        # Run
+        t_test.join()
+
+        # ** Uncheck the loop : should be no called sequence**
+        self.assertFalse(TestInterface.wait_until_event_variable_to_set(event_var, 100000000))
+
+
+
+
+
+
+    def t_thread_test_play_func(self, event_var, tick_timeout=1000):
+        print("EVENNNNT TVAR :" + str(event_var.isSet()))
+        # First test
+        self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
+        self.assertEqual(rx_line[-1], "commande h 987\n")
+
+        # Second Test
+       # with interface_pi.routine_event_cv:
+        event_var.set()
+
+        self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
+        self.assertEqual(rx_line[-1], "start_cmd 3 654\n")
+
+        # Third Test
+        #with interface_pi.routine_event_cv:
+        event_var.set()
+
+        self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
+        self.assertEqual(rx_line[-1], "gazon t 321\n")
+
+        #with interface_pi.routine_event_cv:
+        event_var.set()
 
     #======= Miscellaneous =======
     def update_events(self):
@@ -452,10 +632,40 @@ class TestInterface(unittest.TestCase):
         text.delete("1.0", END)
         self.update_events()
 
+    def wait_until_len_change(old_value, list , tick_timeout=1000):
+        counter = 0
+        #for counter in range(0, tick_timeout):
+        while 1:
+            if len(list) != old_value:
+                return True
+                print("recu")
+        return False
+
+    def wait_until_event_variable_to_set(event_variable, tick_timeout=1000):
+        counter = 0
+        #for counter in range(0, tick_timeout):
+        while 1:
+            if not event_variable.isSet():
+                print("recu")
+                return True
+        return False
+
+
+
 
 def dummy_send( cmd_write):
+    if cmd_write[0] == " ":
+        cmd_write = cmd_write[1:]
+    else:
+        pass
     rx_line.append(cmd_write)
-    #print("dummy_serial:" + rx_line[-1])
+    print(cmd_write)
+
+def dummy_play():
+    with stop_thread:
+        stop_thread.wait()
+
+old_play = interface_pi.play
 
 #Set the send function to send data to an array instead of serial port
 interface_pi.send = dummy_send
