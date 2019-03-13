@@ -107,7 +107,7 @@ void loop()
 // Juste pour faire des tests
 if (MinLS[1])
 { 
-  Serial.println("Wouhou! it is working");
+  Serial.println("Wouhou! it is working !!");
   stopBySwitch(Axis_table[3]);
 }
 
