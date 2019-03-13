@@ -177,21 +177,30 @@ void Axis::HomeRequest(bool *HomeSW)
 {
 	Sts_Homed = 0;
 	HomeOffset = 0;
-	writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
+	//writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
 	
-	moveAtSpeed(String(-50));
+	if(Sts_Homing == 0)
+	{
+		moveAtSpeed(String(-50));
+	}
 
 	Sts_Homing = 1;
 
-	if(HomeSW)
+	if(*HomeSW)
 	{
 		moveAtSpeed(String(0));
 		HomeOffset = 0 - Sts_ActualPosition;
-		writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
+		Serial.println(HomeOffset);
+		//writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
 
 		Sts_Homing = 0;
 		Sts_Homed = 1;
 	}
+}
+
+void Axis::stopCmd()
+{
+	moveAtSpeed("0");
 }
 
 void Axis::moveTo(String cmd)

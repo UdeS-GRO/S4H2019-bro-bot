@@ -36,7 +36,7 @@ public:
 	int tews;
 	uint8_t ID;
 	int model;
-	bool debugMode = 1;
+	bool debugMode = 0;
 
 
 	// ********************************
@@ -80,6 +80,7 @@ public:
 
 	void Zero();
 	void HomeRequest(bool *HomeSW);
+	void stopCmd();
 	void moveTo(String cmd);
 	void moveAtSpeed(String cmd);
 
