@@ -17,6 +17,7 @@ const byte address[6] = "gant0";
 String message[NB_MESSAGE];
 void read_sensor(void);
 void send_message(void);
+void motor_control(void);
 float filter_signal(float signal_to_filter);
 float old_finger_0 = 0;
 
@@ -42,8 +43,6 @@ void loop()
   
   /* Send the builded strings */
   send_message();
-  
-  delay(100);
 }
 float old_value=0;      // a enelever
 
@@ -74,10 +73,7 @@ void read_sensor(void)
   else{
     old_finger_0 = finger_0;
   }
-  
-  
-  
-  
+    
   int finger_1 = analogRead(INDEX_PIN);     //Read voltage of the voltage divider of the index
   int finger_2 = analogRead(MAJOR_PIN);     //Read voltage of the voltage divider of the major
 
@@ -86,10 +82,9 @@ void read_sensor(void)
   //message[1] = String("finger_1 " + String(finger_1)  + "\n");
   //message[2] = String("finger_2 " + String(finger_2)  + "\n");
   //message[3] = String("\n");
-  //radio.write(&mess, sizeof(mess));
-
 
 }
+
 
 
 void send_message(void)
