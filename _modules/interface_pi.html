@@ -1,0 +1,547 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>interface_pi &#8212; pi_interface_doc  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for interface_pi</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd"> This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="sd"> License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="sd"> file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span><span class="p">,</span><span class="n">Condition</span><span class="p">,</span><span class="n">RLock</span><span class="p">,</span><span class="n">Event</span>
+
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="k">import</span> <span class="n">Tk</span><span class="p">,</span> <span class="n">Button</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">Entry</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Checkbutton</span><span class="p">,</span> <span class="n">BooleanVar</span><span class="p">,</span> <span class="n">END</span><span class="p">,</span> <span class="n">INSERT</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="c1">#import serial</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;_main__&#39;</span><span class="p">:</span>
+    <span class="n">ser_write</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="s2">&quot;/dev/ttyACM1&quot;</span><span class="p">,</span> <span class="mi">9600</span><span class="p">)</span>
+    <span class="n">ser_read</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="s2">&quot;/dev/ttyACM1&quot;</span><span class="p">,</span> <span class="mi">9600</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Interface is imported: serial function will be overwritten&quot;</span><span class="p">)</span>
+    <span class="c1"># Should not be called in test</span>
+    <span class="n">ser_write</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ser_read</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+
+<span class="n">angle1</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">angle2</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">angle3</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">listeMoteur1</span> <span class="o">=</span> <span class="p">[</span><span class="n">angle1</span><span class="p">]</span>
+<span class="n">listeMoteur2</span> <span class="o">=</span> <span class="p">[</span><span class="n">angle2</span><span class="p">]</span>
+<span class="n">listeMoteur3</span> <span class="o">=</span> <span class="p">[</span><span class="n">angle3</span><span class="p">]</span>
+
+<span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">command</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">execute</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<span class="n">routine_event_cv</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+<span class="n">routine_event_cv</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+<span class="n">send_lock</span> <span class="o">=</span> <span class="n">RLock</span><span class="p">()</span>
+<span class="n">routine_cv_waiting_for_unlock</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">Tk</span><span class="p">()</span>
+<span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">&quot;750x250&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="leftKeyM1"><a class="viewcode-back" href="../interface_pi.html#interface_pi.leftKeyM1">[docs]</a><span class="k">def</span> <span class="nf">leftKeyM1</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; This is documentation or nah  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 1 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="leftKeyM2"><a class="viewcode-back" href="../interface_pi.html#interface_pi.leftKeyM2">[docs]</a><span class="k">def</span> <span class="nf">leftKeyM2</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 2 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="leftKeyM3"><a class="viewcode-back" href="../interface_pi.html#interface_pi.leftKeyM3">[docs]</a><span class="k">def</span> <span class="nf">leftKeyM3</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 3 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">10</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="rightKeyM1"><a class="viewcode-back" href="../interface_pi.html#interface_pi.rightKeyM1">[docs]</a><span class="k">def</span> <span class="nf">rightKeyM1</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 1 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="rightKeyM2"><a class="viewcode-back" href="../interface_pi.html#interface_pi.rightKeyM2">[docs]</a><span class="k">def</span> <span class="nf">rightKeyM2</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 2 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="rightKeyM3"><a class="viewcode-back" href="../interface_pi.html#interface_pi.rightKeyM3">[docs]</a><span class="k">def</span> <span class="nf">rightKeyM3</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">autoState</span> <span class="o">=</span> <span class="n">automatic</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;moveto 3 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">send</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">autoState</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">10</span>
+        <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="automatic"><a class="viewcode-back" href="../interface_pi.html#interface_pi.automatic">[docs]</a><span class="k">def</span> <span class="nf">automatic</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">automaticChoice</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="sendAngle"><a class="viewcode-back" href="../interface_pi.html#interface_pi.sendAngle">[docs]</a><span class="k">def</span> <span class="nf">sendAngle</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">valueM1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="n">valueM2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="n">valueM3</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">valueM1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">valueM2</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">valueM3</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">valueM1</span>
+    <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">valueM2</span>
+    <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">valueM3</span>
+
+    <span class="n">cmd1</span> <span class="o">=</span> <span class="s2">&quot;moveto 1 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">cmd2</span> <span class="o">=</span> <span class="s2">&quot;moveto 2 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">cmd3</span> <span class="o">=</span> <span class="s2">&quot;moveto 3 &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+    <span class="n">send</span><span class="p">(</span><span class="n">cmd1</span><span class="p">)</span>
+    <span class="n">send</span><span class="p">(</span><span class="n">cmd2</span><span class="p">)</span>
+    <span class="n">send</span><span class="p">(</span><span class="n">cmd3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="reset"><a class="viewcode-back" href="../interface_pi.html#interface_pi.reset">[docs]</a><span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="up"><a class="viewcode-back" href="../interface_pi.html#interface_pi.up">[docs]</a><span class="k">def</span> <span class="nf">up</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">global</span> <span class="n">command</span>
+    <span class="k">global</span> <span class="n">execute</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instructionListe</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span><span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+            <span class="n">command</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">command</span><span class="p">),</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">command</span><span class="p">)),</span><span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+            <span class="n">execute</span> <span class="o">=</span> <span class="n">instructionListe</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="down"><a class="viewcode-back" href="../interface_pi.html#interface_pi.down">[docs]</a><span class="k">def</span> <span class="nf">down</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">global</span> <span class="n">command</span>
+    <span class="k">global</span> <span class="n">execute</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instructionListe</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span><span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">command</span><span class="p">),</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">command</span><span class="p">)),</span><span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+            <span class="n">execute</span> <span class="o">=</span> <span class="n">instructionListe</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="add"><a class="viewcode-back" href="../interface_pi.html#interface_pi.add">[docs]</a><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">global</span> <span class="n">command</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+    <span class="n">instructionListe</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span><span class="n">END</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instructionListe</span><span class="p">:</span>
+        <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span>
+
+    <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s2">&quot;x&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="delete"><a class="viewcode-back" href="../interface_pi.html#interface_pi.delete">[docs]</a><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instructionListe</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+        <span class="n">instructionListe</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span><span class="n">END</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instructionListe</span><span class="p">:</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">inst</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s2">&quot;x&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="replace"><a class="viewcode-back" href="../interface_pi.html#interface_pi.replace">[docs]</a><span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">instructionListe</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+
+        <span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">instructionListe</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+        <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s2">&quot;x&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="play_thread"><a class="viewcode-back" href="../interface_pi.html#interface_pi.play_thread">[docs]</a><span class="k">def</span> <span class="nf">play_thread</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+
+    <span class="k">try</span> <span class="p">:</span>
+        <span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span> <span class="o">=</span> <span class="n">play</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Thread actually running&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span><span class="o">.</span><span class="n">is_alive</span><span class="p">():</span>
+        <span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s2">&quot;There is actually a routine running&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="loop"><a class="viewcode-back" href="../interface_pi.html#interface_pi.loop">[docs]</a><span class="k">def</span> <span class="nf">loop</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">loopRoutine</span><span class="o">.</span><span class="n">get</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="play"><a class="viewcode-back" href="../interface_pi.html#interface_pi.play">[docs]</a><span class="k">def</span> <span class="nf">play</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="k">global</span> <span class="n">routine_event_cv</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+    <span class="n">first_loop</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">loop</span><span class="p">()</span> <span class="ow">or</span> <span class="n">first_loop</span><span class="p">):</span>
+        <span class="n">first_loop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">inst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">execute</span> <span class="o">=</span> <span class="n">inst</span>
+                <span class="n">send</span><span class="p">(</span><span class="n">execute</span><span class="p">)</span>
+                <span class="n">routine_event_cv</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="n">routine_event_cv</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>         <span class="c1">#Wait the nolidge flag or wait 20 seconds</span></div>
+
+
+<div class="viewcode-block" id="execute"><a class="viewcode-back" href="../interface_pi.html#interface_pi.execute">[docs]</a><span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">routine</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">stopindex</span><span class="o">=</span><span class="n">END</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">send</span><span class="p">(</span><span class="n">instructionListe</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
+
+<span class="c1">#-------------moteur 1-------------</span>
+<span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;moteur 1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">left1Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;-&quot;</span><span class="p">)</span>
+<span class="n">right1Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">)</span>
+
+<span class="n">left1Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">leftKeyM1</span><span class="p">)</span>
+<span class="n">left1Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">right1Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">rightKeyM1</span><span class="p">)</span>
+<span class="n">right1Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">moteur1Entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">moteur1Entry</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="c1">#-------------moteur 2-------------</span>
+<span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;moteur 2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">left2Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;-&quot;</span><span class="p">)</span>
+<span class="n">right2Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">)</span>
+
+<span class="n">left2Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">leftKeyM2</span><span class="p">)</span>
+<span class="n">left2Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">right2Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">rightKeyM2</span><span class="p">)</span>
+<span class="n">right2Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">moteur2Entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">moteur2Entry</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="c1">#-------------moteur 3-------------</span>
+<span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;moteur 3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">left3Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;-&quot;</span><span class="p">)</span>
+<span class="n">right3Button</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">)</span>
+
+<span class="n">left3Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">leftKeyM3</span><span class="p">)</span>
+<span class="n">left3Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">right3Button</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Button-1&gt;&#39;</span><span class="p">,</span> <span class="n">rightKeyM3</span><span class="p">)</span>
+<span class="n">right3Button</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">moteur3Entry</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">moteur3Entry</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="c1">#-------------Routine---------------</span>
+
+<span class="n">routine</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">routine</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">585</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="n">butUp</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;UP&quot;</span><span class="p">)</span>
+<span class="n">butUp</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">up</span><span class="p">)</span>
+<span class="n">butUp</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="n">butDown</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;DOWN&quot;</span><span class="p">)</span>
+<span class="n">butDown</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">down</span><span class="p">)</span>
+<span class="n">butDown</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">36</span><span class="p">)</span>
+
+<span class="n">butAdd</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;ADD&quot;</span><span class="p">)</span>
+<span class="n">butAdd</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">add</span><span class="p">)</span>
+<span class="n">butAdd</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">68</span><span class="p">)</span>
+
+<span class="n">butDelete</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">)</span>
+<span class="n">butDelete</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="p">)</span>
+<span class="n">butDelete</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+
+<span class="n">butReplace</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;REPLACE&quot;</span><span class="p">)</span>
+<span class="n">butReplace</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">replace</span><span class="p">)</span>
+<span class="n">butReplace</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">132</span><span class="p">)</span>
+
+<span class="n">butRun</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;PLAY&quot;</span><span class="p">)</span>
+<span class="n">butRun</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">play_thread</span><span class="p">)</span>
+<span class="n">butRun</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">164</span><span class="p">)</span>
+
+<span class="n">butExecute</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;EXECUTE&quot;</span><span class="p">)</span>
+<span class="n">butExecute</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">execute</span><span class="p">)</span>
+<span class="n">butExecute</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">485</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">196</span><span class="p">)</span>
+
+<span class="n">instructEntry</span> <span class="o">=</span> <span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">instructEntry</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">585</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">160</span><span class="p">)</span>
+
+
+<span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">INSERT</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="n">instructionListe</span><span class="p">:</span>
+    <span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">inst</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1">#-------------Send button-------------</span>
+
+<span class="n">sendButton</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;send&quot;</span><span class="p">)</span>
+<span class="n">sendButton</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">sendAngle</span><span class="p">)</span>
+<span class="n">sendButton</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+
+<span class="c1">#-------------Automatic send----------</span>
+
+<span class="n">automaticChoice</span> <span class="o">=</span> <span class="n">BooleanVar</span><span class="p">()</span>
+<span class="n">auto</span> <span class="o">=</span> <span class="n">Checkbutton</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;automatic send&quot;</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="n">automaticChoice</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">automatic</span><span class="p">)</span>
+<span class="n">auto</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+
+<span class="c1">#-------------Loop Routine ----------</span>
+<span class="n">loopRoutine</span> <span class="o">=</span> <span class="n">BooleanVar</span><span class="p">()</span>
+<span class="n">loopRout</span> <span class="o">=</span> <span class="n">Checkbutton</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Loop&quot;</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span><span class="n">loopRoutine</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">loop</span><span class="p">)</span>
+<span class="n">loopRout</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+
+<span class="c1">#-------------Reset-------------------</span>
+
+<span class="n">resetButton</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;reset&quot;</span><span class="p">)</span>
+<span class="n">resetButton</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">reset</span><span class="p">)</span>
+<span class="n">resetButton</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span> <span class="o">=</span> <span class="n">E</span><span class="p">)</span>
+
+<span class="c1">#-------------Quit button-------------</span>
+<span class="n">bouton</span> <span class="o">=</span> <span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">quit</span><span class="p">)</span>
+<span class="n">bouton</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">column</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        
+
+<div class="viewcode-block" id="read"><a class="viewcode-back" href="../interface_pi.html#interface_pi.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+<span class="c1">#    pass</span>
+    <span class="k">global</span> <span class="n">routine_event_cv</span>
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">cmd_read</span> <span class="o">=</span> <span class="n">ser_read</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">cmd_read_decoded</span> <span class="o">=</span> <span class="n">cmd_read</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">cmd_read_decoded</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">cmd_read_decoded</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">cmd_read_decoded</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        
+        <span class="k">if</span> <span class="n">cmd_read_decoded</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">cmd_read_decoded</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;nolidge&#39;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">routine_event_cv</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No waiting task&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="send"><a class="viewcode-back" href="../interface_pi.html#interface_pi.send">[docs]</a><span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="n">cmd_write</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;  &#39;&#39;&#39;</span>
+<span class="c1">#    pass</span>
+    <span class="k">if</span> <span class="n">cmd_write</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+        <span class="n">cmd_write</span> <span class="o">=</span> <span class="n">cmd_write</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">with</span> <span class="n">send_lock</span><span class="p">:</span>
+        <span class="n">ser_write</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cmd_write</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">cmd_write</span><span class="p">)</span></div>
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1">#t1_write = Thread(target = write)</span>
+    <span class="n">t2_read</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span> <span class="o">=</span> <span class="n">read</span><span class="p">)</span>
+    <span class="n">t2_read</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="c1">#t1_write.start()</span>
+
+    <span class="n">send</span> <span class="o">=</span> <span class="n">dummy_send</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+
+    <span class="c1">#t1_write.join()</span>
+
+    <span class="n">t2_read</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Etienne Villemure.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

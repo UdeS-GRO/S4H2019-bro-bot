@@ -1,0 +1,756 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>test_interface_pi &#8212; pi_interface_doc  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for test_interface_pi</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="k">import</span> <span class="n">Tk</span><span class="p">,</span> <span class="n">Button</span><span class="p">,</span> <span class="n">Label</span><span class="p">,</span> <span class="n">Entry</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">Checkbutton</span><span class="p">,</span> <span class="n">BooleanVar</span><span class="p">,</span> <span class="n">END</span><span class="p">,</span> <span class="n">INSERT</span><span class="p">,</span> <span class="n">Text</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span><span class="p">,</span><span class="n">Condition</span><span class="p">,</span><span class="n">RLock</span>
+
+<span class="c1">#sys.path.append(&#39;../&#39;)</span>
+<span class="kn">import</span> <span class="nn">interface_pi</span>
+
+<span class="n">rx_line</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">stop_thread</span> <span class="o">=</span><span class="n">Condition</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TestInterface"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface">[docs]</a><span class="k">class</span> <span class="nc">TestInterface</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+<div class="viewcode-block" id="TestInterface.setUp"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_text</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_entry</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">instructEntry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">INSERT</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">deselect</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">loopRout</span><span class="o">.</span><span class="n">deselect</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">play</span> <span class="o">=</span> <span class="n">old_play</span></div>
+
+
+    <span class="c1">#======= Motor buttons =======</span>
+
+    <span class="c1"># ****** Motor 1 ******</span>
+<div class="viewcode-block" id="TestInterface.test_leftKeyM1"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM1">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="c1">#interface_pi.instructEntry.insert(END, test_str)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 1 ne s&#39;incremente pas de -10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -10 du moteur 1 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 1 ne s&#39;incremente pas de -20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -20 du moteur 1 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM1"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM1">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="c1">#interface_pi.instructEntry.insert(END, test_str)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 1 ne s&#39;incremente pas de 10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur 10 du moteur 1 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 1 ne s&#39;incremente pas de 20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur 20 du moteur 1 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_leftKeyM1_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM1_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM1_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 1 -10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  -10 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 1 -20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  -20 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM1_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM1_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM1_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 1 10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  10 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right1Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 1 20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  20 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+
+    <span class="c1"># ****** Motor 2 ******</span>
+<div class="viewcode-block" id="TestInterface.test_leftKeyM2"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM2">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 2 ne s&#39;incremente pas de -10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -10 du moteur 2 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 2 ne s&#39;incremente pas de -20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -20 du moteur 2 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM2"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM2">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 2 ne s&#39;incremente pas de -10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur 10 du moteur 2 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 2 ne s&#39;incremente pas de -20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -20 du moteur 2 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_leftKeyM2_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM2_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM2_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 2 -10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  -10 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 2 -20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  -20 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM2_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM2_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM2_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 2 10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  10 pour le moteur 2&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right2Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 2 20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  20 pour le moteur 2&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+    <span class="c1"># ****** Motor 3 ******</span>
+<div class="viewcode-block" id="TestInterface.test_leftKeyM3"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM3">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 3 ne s&#39;incremente pas de -10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -10 du moteur 3 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 3 ne s&#39;incremente pas de -20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;-20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur -20 du moteur 3 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM3"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM3">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 3 ne s&#39;incremente pas de 10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;10&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur 10 du moteur 3 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">20</span><span class="p">,</span><span class="s2">&quot;Valeur de la commande du moteur 3 ne s&#39;incremente pas de 20&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;20&#39;</span><span class="p">,</span> <span class="s2">&quot;La valeur 20 du moteur 3 ne s&#39;affiche pas dans son entry&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_leftKeyM3_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_leftKeyM3_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_leftKeyM3_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 3 -10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envoye au OpenCr n&#39;est pas  -10 pour le moteur 3&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">left3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 3 -20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  -20 pour le moteur 3&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_RightKeyM3_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_RightKeyM3_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_RightKeyM3_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test first increment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 3 10</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                         <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  10 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test second increment</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">right3Button</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;moveto 3 20</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                         <span class="s2">&quot;La commande envpoye au OpenCr n&#39;est pas  20 pour le moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+    <span class="c1"># ****** other motors button ******</span>
+<div class="viewcode-block" id="TestInterface.test_automatic"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_automatic">[docs]</a>    <span class="k">def</span> <span class="nf">test_automatic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">automatic</span><span class="p">(),</span> <span class="s2">&quot;Automatic send est coche alors qu&#39;il ne devrait pas l&#39;etre&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Second test:</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">auto</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">automatic</span><span class="p">(),</span> <span class="s2">&quot;Automatic send n&#39;est pas coche alors qu&#39;il devrait l&#39;etre&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_sendAngle"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_sendAngle">[docs]</a>    <span class="k">def</span> <span class="nf">test_sendAngle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">sendButton</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span> <span class="o">=</span> <span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test : verify the update of the listeMoteur values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">100</span><span class="p">,</span><span class="s2">&quot;La valeur d&#39;angle du moteur 1 dans la list des moteur ne vas pas e 100&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">200</span><span class="p">,</span><span class="s2">&quot;La valeur d&#39;angle du moteur 2 dans la list des moteur ne vas pas e 200&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">300</span><span class="p">,</span><span class="s2">&quot;La valeur d&#39;angle du moteur 3 dans la list des moteur ne vas pas e 300&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Second test: verify the msg send to the OpenCr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;moveto 1 100</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;La mauvaise commande est envoyee au moteur 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;moveto 2 200</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;La mauvaise commande est envoyee au moteur 2&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;moveto 3 300</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="s2">&quot;La mauvaise commande est envoyee au moteur 3&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_reset"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_reset">[docs]</a>    <span class="k">def</span> <span class="nf">test_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">sendButton</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">resetButton</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test : verify if all values the angles values of the motors returned to 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">listeMoteur3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur1Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur2Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">moteur3Entry</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ======= Instruction list =======</span>
+
+<div class="viewcode-block" id="TestInterface.test_add_instruction_list"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_add_instruction_list">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_instruction_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Setup the test</span>
+        <span class="n">test_str</span> <span class="o">=</span> <span class="s2">&quot;commande 1 007&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">test_str</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butAdd</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s2">&quot; commande 1 007</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_add_routine_list"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_add_routine_list">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_routine_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Setup the test</span>
+        <span class="n">test_str</span> <span class="o">=</span> <span class="s2">&quot;commande 1 008&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">test_str</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butAdd</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># Test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span><span class="n">END</span><span class="p">),</span><span class="s2">&quot;x commande 1 008</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_up"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_up">[docs]</a>    <span class="k">def</span> <span class="nf">test_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Clear test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1">#Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande 1 008</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; stop_cmd 5 701</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butUp</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test: Verify if the x move upward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot;x commande 1 008</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot; stop_cmd 5 701</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1">#Second test: Verify that the x could not go higher than first position</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butUp</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot;x commande 1 008</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot; stop_cmd 5 701</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_down"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_down">[docs]</a>    <span class="k">def</span> <span class="nf">test_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1">#Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande h 450</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; start_cmd 3 819</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butDown</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test: Verify if the x move downward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot; commande h 450</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot;x start_cmd 3 819</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1">#Second test: Verify that the x could not go lower than the last position</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butDown</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span><span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot; commande h 450</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot;x start_cmd 3 819</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_delete"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_delete">[docs]</a>    <span class="k">def</span> <span class="nf">test_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande h 798</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; start_cmd 3 125</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_3</span> <span class="o">=</span> <span class="s2">&quot; gazon t 112</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">,</span> <span class="n">test_str_3</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;3.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butDelete</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test: Verify if the second command has been removed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot; commande h 798</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot;x gazon t 112</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Second test: Verify if the last command has been removed</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butDelete</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot;x commande h 798</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_replace"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_replace">[docs]</a>    <span class="k">def</span> <span class="nf">test_replace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande o 111</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; start_cmd 9 222</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_3</span> <span class="o">=</span> <span class="s2">&quot; gazon t 452</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_4</span> <span class="o">=</span> <span class="s2">&quot;new_cmd 1&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">,</span> <span class="n">test_str_3</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;3.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructEntry</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="n">test_str_4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butReplace</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test: Verify if the second command has been replaced</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0&#39;</span><span class="p">),</span> <span class="s2">&quot; commande o 111</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;2.0&#39;</span><span class="p">,</span> <span class="s1">&#39;3.0&#39;</span><span class="p">),</span> <span class="s2">&quot;x new_cmd 1</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;3.0&#39;</span><span class="p">,</span> <span class="n">END</span><span class="p">),</span> <span class="s2">&quot; gazon t 452</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_execute"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_execute">[docs]</a>    <span class="k">def</span> <span class="nf">test_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; moveto 1 100</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; moveto 2 90</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butExecute</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># First test: Verify if the command has been send</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;moveto 2 90</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_play_thread"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_play_thread">[docs]</a>    <span class="k">def</span> <span class="nf">test_play_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Setup the test</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">play</span> <span class="o">=</span> <span class="n">dummy_play</span>
+
+        <span class="c1">#First test: verify that the thread is active</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">butRun</span><span class="o">.</span><span class="n">event_generate</span><span class="p">(</span><span class="s2">&quot;&lt;Button-1&gt;&quot;</span><span class="p">,</span> <span class="n">when</span><span class="o">=</span><span class="s2">&quot;tail&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span><span class="o">.</span><span class="n">isAlive</span><span class="p">())</span>
+
+        <span class="c1">#Second test: verify thath the thread is inactive</span>
+        <span class="k">with</span> <span class="n">stop_thread</span><span class="p">:</span>
+            <span class="n">stop_thread</span><span class="o">.</span><span class="n">notify_all</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">play_thread</span><span class="o">.</span><span class="n">t_play</span><span class="o">.</span><span class="n">isAlive</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="TestInterface.test_play"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.test_play">[docs]</a>    <span class="k">def</span> <span class="nf">test_play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande h 987</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; start_cmd 3 654</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_3</span> <span class="o">=</span> <span class="s2">&quot; gazon t 321</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="n">old_rx_line_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rx_line</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">,</span> <span class="n">test_str_3</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;3.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="c1"># This tests need to be run in another thread because the Tkinter cannot be in another thread itself</span>
+        <span class="n">t_test</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_thread_test_play_func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine_event_cv</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">))</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Run</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.loop_routine"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.loop_routine">[docs]</a>    <span class="k">def</span> <span class="nf">loop_routine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setup the test</span>
+        <span class="n">test_str_1</span> <span class="o">=</span> <span class="s2">&quot; commande h 987</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_2</span> <span class="o">=</span> <span class="s2">&quot; start_cmd 3 654</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">test_str_3</span> <span class="o">=</span> <span class="s2">&quot; gazon t 321</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">loopRout</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_str_1</span><span class="p">,</span> <span class="n">test_str_2</span><span class="p">,</span> <span class="n">test_str_3</span><span class="p">]</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span> <span class="o">+</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;2.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">routine</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;3.0&quot;</span><span class="p">,</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">instructionListe</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rendu ici 1&quot;</span> <span class="p">)</span>
+        <span class="c1"># ** First sequence **</span>
+        <span class="n">old_rx_line_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rx_line</span><span class="p">)</span>
+        <span class="c1"># This tests need to be run in another thread because the Tkinter cannot be in another thread itself</span>
+        <span class="n">t_test</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_thread_test_play_func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine_event_cv</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">))</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Run</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rendu ici 2&quot;</span><span class="p">)</span>
+        <span class="c1"># ** Second sequence **</span>
+        <span class="n">old_rx_line_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rx_line</span><span class="p">)</span>
+        <span class="c1"># This tests need to be run in another thread because the Tkinter cannot be in another thread itself</span>
+        <span class="n">t_test</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_thread_test_play_func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine_event_cv</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">))</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Run</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rendu ici 3&quot;</span><span class="p">)</span>
+
+        <span class="c1"># ** Uncheck the loop : first sequence**</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">loopRout</span><span class="o">.</span><span class="n">deselect</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rendu ici 4&quot;</span><span class="p">)</span>
+        <span class="n">old_rx_line_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rx_line</span><span class="p">)</span>
+        <span class="c1"># This tests need to be run in another thread because the Tkinter cannot be in another thread itself</span>
+        <span class="n">t_test</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">t_thread_test_play_func</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">interface_pi</span><span class="o">.</span><span class="n">routine_event_cv</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">))</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Run</span>
+        <span class="n">t_test</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="c1"># ** Uncheck the loop : should be no called sequence**</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">TestInterface</span><span class="o">.</span><span class="n">wait_until_event_variable_to_set</span><span class="p">(</span><span class="n">event_var</span><span class="p">,</span> <span class="mi">100000000</span><span class="p">))</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="TestInterface.t_thread_test_play_func"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.t_thread_test_play_func">[docs]</a>    <span class="k">def</span> <span class="nf">t_thread_test_play_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_var</span><span class="p">,</span> <span class="n">tick_timeout</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EVENNNNT TVAR :&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">event_var</span><span class="o">.</span><span class="n">isSet</span><span class="p">()))</span>
+        <span class="c1"># First test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">TestInterface</span><span class="o">.</span><span class="n">wait_until_event_variable_to_set</span><span class="p">(</span><span class="n">event_var</span><span class="p">,</span> <span class="n">tick_timeout</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;commande h 987</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Second Test</span>
+       <span class="c1"># with interface_pi.routine_event_cv:</span>
+        <span class="n">event_var</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">TestInterface</span><span class="o">.</span><span class="n">wait_until_event_variable_to_set</span><span class="p">(</span><span class="n">event_var</span><span class="p">,</span> <span class="n">tick_timeout</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;start_cmd 3 654</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Third Test</span>
+        <span class="c1">#with interface_pi.routine_event_cv:</span>
+        <span class="n">event_var</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">TestInterface</span><span class="o">.</span><span class="n">wait_until_event_variable_to_set</span><span class="p">(</span><span class="n">event_var</span><span class="p">,</span> <span class="n">tick_timeout</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">rx_line</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;gazon t 321</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1">#with interface_pi.routine_event_cv:</span>
+        <span class="n">event_var</span><span class="o">.</span><span class="n">set</span><span class="p">()</span></div>
+
+    <span class="c1">#======= Miscellaneous =======</span>
+<div class="viewcode-block" id="TestInterface.update_events"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.update_events">[docs]</a>    <span class="k">def</span> <span class="nf">update_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">interface_pi</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">update_idletasks</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.clear_entry"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.clear_entry">[docs]</a>    <span class="k">def</span> <span class="nf">clear_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">entry</span><span class="p">):</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.clear_text"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.clear_text">[docs]</a>    <span class="k">def</span> <span class="nf">clear_text</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">text</span><span class="p">):</span>
+        <span class="n">text</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_events</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestInterface.wait_until_len_change"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.wait_until_len_change">[docs]</a>    <span class="k">def</span> <span class="nf">wait_until_len_change</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="nb">list</span> <span class="p">,</span> <span class="n">tick_timeout</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#for counter in range(0, tick_timeout):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">old_value</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;recu&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="TestInterface.wait_until_event_variable_to_set"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.TestInterface.wait_until_event_variable_to_set">[docs]</a>    <span class="k">def</span> <span class="nf">wait_until_event_variable_to_set</span><span class="p">(</span><span class="n">event_variable</span><span class="p">,</span> <span class="n">tick_timeout</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#for counter in range(0, tick_timeout):</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">event_variable</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;recu&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div></div>
+
+
+
+
+<div class="viewcode-block" id="dummy_send"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.dummy_send">[docs]</a><span class="k">def</span> <span class="nf">dummy_send</span><span class="p">(</span> <span class="n">cmd_write</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">cmd_write</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+        <span class="n">cmd_write</span> <span class="o">=</span> <span class="n">cmd_write</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="n">rx_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cmd_write</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">cmd_write</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="dummy_play"><a class="viewcode-back" href="../test_interface_pi.html#test_interface_pi.dummy_play">[docs]</a><span class="k">def</span> <span class="nf">dummy_play</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">stop_thread</span><span class="p">:</span>
+        <span class="n">stop_thread</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
+
+<span class="n">old_play</span> <span class="o">=</span> <span class="n">interface_pi</span><span class="o">.</span><span class="n">play</span>
+
+<span class="c1">#Set the send function to send data to an array instead of serial port</span>
+<span class="n">interface_pi</span><span class="o">.</span><span class="n">send</span> <span class="o">=</span> <span class="n">dummy_send</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dummy_serial:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Etienne Villemure.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
