@@ -81,6 +81,10 @@ void loop()
 {
   short axis_index;
   
+  //Axis_table[1]->readStatus();
+  //Axis_table[2]->readStatus();
+  //Axis_table[3]->readStatus();
+    
   // Limits Switch digital Read
   MinLS[1] = digitalRead(inMinLS01);
  /* MinLS[2] = digitalRead(inMinLS02);
@@ -105,10 +109,15 @@ void loop()
   }*/
 
 // Juste pour faire des tests
-if (MinLS[1])
+if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)
 { 
   Serial.println("Wouhou! it is working !!");
   stopBySwitch(Axis_table[3]);
+}
+
+if( Axis_table[3]->Sts_Homing == 1)
+{
+  Axis_table[3]->HomeRequest(&MinLS[1]);
 }
 
 
