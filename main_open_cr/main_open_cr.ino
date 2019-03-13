@@ -79,30 +79,51 @@ void setup()
 
 void loop() 
 {
+  short axis_index;
+  
   // Limits Switch digital Read
   MinLS[1] = digitalRead(inMinLS01);
-  MinLS[2] = digitalRead(inMinLS02);
+ /* MinLS[2] = digitalRead(inMinLS02);
   MinLS[3] = digitalRead(inMinLS03);
   MaxLS[1] = digitalRead(inMaxLS01);
   MaxLS[2] = digitalRead(inMaxLS02);
-  MaxLS[3] = digitalRead(inMaxLS03);
+  MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes             
 
 //  bool test = Axis_table[1]->HomeRequest(&MinLS[1]); // Test homing Command
   //Read message
   read_serial();
   read_radio();
 
+// stoping by limit switch
+/*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)      // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  {
+    if (MinLS[axis_index] || MaxLS[axis_index])
+    {
+      Serial.print("that is weird");
+      stopBySwitch(Axis_table[axis_index]);
+    }
+  }*/
+
+// Juste pour faire des tests
+if (MinLS[1])
+{ 
+  Serial.println("Wouhou! it is working");
+  stopBySwitch(Axis_table[3]);
+}
+
 
   //Computing
-  short axis_index;
   for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
     torque_control(Axis_table[axis_index]);
   }
-
   
 }
 
+void stopBySwitch(Axis * axis)
+{
+  axis->stopCmd();
+}
 
 void torque_control(Axis * axis)
 {
@@ -183,7 +204,9 @@ void read_serial(void)
       if ((cmd[1].toInt()  >= 1)  && (cmd[1].toInt()  < NUMBER_OF_AXIS))
       {
         /* Select the right motor to talk to*/
-        axis = Axis_table[cmd[1].toInt()];
+        int ID = cmd[1].toInt();
+        
+        axis = Axis_table[ID];
       
       
         if(cmd[0] == "joint")
@@ -194,7 +217,8 @@ void read_serial(void)
           }  
         else if(cmd[0] == "zero")
          {
-            axis->Zero();
+            //axis->Zero();
+            axis->HomeRequest(&MinLS[1]);
          }
          
         else if(cmd[0] == "speed")
