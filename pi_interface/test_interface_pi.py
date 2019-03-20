@@ -48,6 +48,9 @@ class TestInterface(unittest.TestCase):
 
         interface_pi.play = old_play
 
+        interface_pi.radioButFingers[2].select()
+        self.update_events()
+
 
     #======= Motor buttons =======
 
@@ -560,7 +563,7 @@ class TestInterface(unittest.TestCase):
         interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
 
         self.update_events()
-        print("rendu ici 1" )
+        #print("rendu ici 1" )
         # ** First sequence **
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
@@ -571,7 +574,7 @@ class TestInterface(unittest.TestCase):
         interface_pi.play()
         t_test.join()
 
-        print("rendu ici 2")
+       # print("rendu ici 2")
         # ** Second sequence **
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
@@ -580,12 +583,12 @@ class TestInterface(unittest.TestCase):
 
         # Run
         t_test.join()
-        print("rendu ici 3")
+       # print("rendu ici 3")
 
         # ** Uncheck the loop : first sequence**
         interface_pi.loopRout.deselect()
         self.update_events()
-        print("rendu ici 4")
+       # print("rendu ici 4")
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
         t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
@@ -597,13 +600,8 @@ class TestInterface(unittest.TestCase):
         # ** Uncheck the loop : should be no called sequence**
         self.assertFalse(TestInterface.wait_until_event_variable_to_set(event_var, 100000000))
 
-
-
-
-
-
     def t_thread_test_play_func(self, event_var, tick_timeout=1000):
-        print("EVENNNNT TVAR :" + str(event_var.isSet()))
+       # print("EVENNNNT TVAR :" + str(event_var.isSet()))
         # First test
         self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
         self.assertEqual(rx_line[-1], "commande h 987\n")
@@ -625,6 +623,53 @@ class TestInterface(unittest.TestCase):
         #with interface_pi.routine_event_cv:
         event_var.set()
 
+    # ======= Finger control finger =======
+
+    def test_radio_button(self):
+        # First test
+        self.assertEqual(interface_pi.finger_control_variable.get(), "LOCK")
+
+        # Second test
+        interface_pi.radioButFingers[0].select()
+        self.update_events()
+        self.assertEqual(interface_pi.finger_control_variable.get(), "GUI")
+
+        # Third test
+        interface_pi.radioButFingers[1].select()
+        self.update_events()
+        self.assertEqual(interface_pi.finger_control_variable.get(), "GLOVE")
+
+        # Fourth test
+        interface_pi.radioButFingers[3].select()
+        self.update_events()
+        self.assertEqual(interface_pi.finger_control_variable.get(), "FREE")
+
+        # Last test
+        interface_pi.radioButFingers[2].select()
+        self.update_events()
+        self.assertEqual(interface_pi.finger_control_variable.get(), "LOCK")
+
+    def test_finger_send(self):
+
+        old_rx_line_length = len(rx_line)
+
+        # Call function
+        interface_pi.finger_send(2, 100)
+
+        # First test: Message should not be sent because the finger control is in "LOCK"
+        self.assertEqual(old_rx_line_length, old_rx_line_length)
+
+        # Change the finger control to the "GUI" mode
+        interface_pi.radioButFingers[0].select()
+        self.update_events()
+
+        interface_pi.finger_send(3, 300)
+
+        # Second test: should have sent a message corresponding to the function parameters
+        self.assertEqual(rx_line[-1],"finger_move 3 300\n")
+
+
+
     #======= Miscellaneous =======
     def update_events(self):
         interface_pi.root.update()
@@ -643,8 +688,8 @@ class TestInterface(unittest.TestCase):
         #for counter in range(0, tick_timeout):
         while 1:
             if len(list) != old_value:
+                #print("recu")
                 return True
-                print("recu")
         return False
 
     def wait_until_event_variable_to_set(event_variable, tick_timeout=1000):
@@ -652,7 +697,7 @@ class TestInterface(unittest.TestCase):
         #for counter in range(0, tick_timeout):
         while 1:
             if not event_variable.isSet():
-                print("recu")
+                #print("recu")
                 return True
         return False
 
@@ -665,7 +710,7 @@ def dummy_send( cmd_write):
     else:
         pass
     rx_line.append(cmd_write)
-    print(cmd_write)
+    #print(cmd_write)
 
 def dummy_play():
     with stop_thread:

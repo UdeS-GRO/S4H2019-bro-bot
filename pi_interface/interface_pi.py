@@ -6,9 +6,16 @@
 
 from threading import Thread,Condition,RLock,Event
 
-from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text
+from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text,Scale, constants, \
+    Radiobutton, StringVar
 import time
 import serial
+
+test_mode = False
+
+if __name__ == '__main__':
+    if test_mode:
+        __name__ = "__test__"
 
 if __name__ == '__main__':
     ser_write = serial.Serial("/dev/ttyACM1", 9600)
@@ -20,6 +27,27 @@ else:
     ser_write = None
     ser_read = None
 
+
+rx_line = []
+def dummy_send( cmd_write):
+    if cmd_write[0] == " ":
+        cmd_write = cmd_write[1:]
+    else:
+        pass
+    rx_line.append(cmd_write)
+    print(cmd_write)
+
+def send(cmd_write):
+    '''  '''
+#    pass
+    if cmd_write[0] == " ":
+        cmd_write = cmd_write[1:]
+    else:
+        pass
+
+    with send_lock:
+        ser_write.write(cmd_write.encode())
+        print(cmd_write)
 
 
 angle1 = 0
@@ -34,13 +62,19 @@ instructionListe = []
 command = 1
 execute = ""
 
+# Concurrency variable and thread
 routine_event_cv = Event()
 routine_event_cv.set()
 send_lock = RLock()
 routine_cv_waiting_for_unlock = False
-root = Tk()
-root.geometry("750x250")
 
+threads_on = True
+
+root = Tk()
+root.geometry("750x300")
+
+
+FINGERS_MODE_LIST = [("Control with interface", "GUI"),("Control with glove", "GLOVE"),("Lock position", "LOCK"), ("Torque off", "FREE")]
 
 def leftKeyM1(event):
     '''  '''
@@ -279,7 +313,7 @@ def play():
     global routine_event_cv
     x = routine.search("x","1.0", stopindex=END)
     first_loop = True
-    while (loop() or first_loop):
+    while (loop() or first_loop) and threads_on:
         first_loop = False
         for index, inst in enumerate(instructionListe):
             if index < int(float(x))-1:
@@ -294,12 +328,45 @@ def play():
 def execute(event):
     '''  '''
     x = routine.search("x","1.0", stopindex=END)
-    print(x)
-    print(instructionListe)
+    #print(x)
+    #print(instructionListe)
 
-    print(instructionListe[int(float(x))-1])
+    #print(instructionListe[int(float(x))-1])
     send(instructionListe[int(float(x))-1])
 
+def finger1_event(value):
+    finger_send(1, value)
+
+def finger2_event(value):
+    finger_send(2, value)
+
+def finger3_event(value):
+    finger_send(3, value)
+
+def finger_send(finger_number,value):
+
+    if finger_control_variable.get() == 'GUI':
+        new_msg = "finger_move " + str(finger_number) + " " + str(value) + "\n"
+        send(new_msg)
+
+def finger_control_mode(*args):
+    new_mode = finger_control_variable.get()
+
+    if new_mode == "LOCK":
+        new_msg = "finger_mode LOCK\n"
+        send(new_msg)
+
+    elif new_mode == "FREE":
+        new_msg = "finger_mode FREE\n"
+        send(new_msg)
+
+    elif new_mode == "GLOVE":
+        new_msg = "finger_mode GLOVE\n"
+        send(new_msg)
+
+    elif new_mode == "GUI":
+        new_msg = "finger_mode GUI\n"
+        send(new_msg)
 
 #-------------moteur 1-------------
 Label(root,text = "moteur 1").grid(row=0,sticky=W, padx=4)
@@ -414,13 +481,58 @@ resetButton.grid(row=3, column=1, sticky = E)
 #-------------Quit button-------------
 bouton = Button(root, text = "close", command=root.quit)
 bouton.grid(row = 3, column = 0)
-        
+
+#-------------Slider first finger-------------
+slider_group_x_offset = 4
+slider_group_y_offset = 150
+
+l_Finger1= Label(root,text = "Finger 1")
+l_Finger1.place(x = slider_group_x_offset, y = slider_group_y_offset + 20)
+
+sliderFinger1 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger1_event)
+sliderFinger1.place(x = slider_group_x_offset+66 , y = slider_group_y_offset)
+
+#-------------Slider second finger-------------
+
+l_Finger2= Label(root,text = "Finger 2")
+l_Finger2.place(x = slider_group_x_offset, y = slider_group_y_offset + 20+40)
+
+sliderFinger2 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger2_event)
+sliderFinger2.place(x = slider_group_x_offset+66 , y = slider_group_y_offset+40)
+
+#-------------Slider third finger-------------
+
+l_Finger3= Label(root,text = "Finger 3")
+l_Finger3.place(x = slider_group_x_offset, y = slider_group_y_offset + 20+80)
+
+sliderFinger3 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger3_event)
+sliderFinger3.place(x = slider_group_x_offset+66 , y = slider_group_y_offset+80)
+
+#------------- Finger select control mode -------------
+finger_control_variable = StringVar()
+finger_control_variable.set(["L"])
+
+
+radio_butt_offset = 20
+radi_butt_index = 0
+
+radioButFingers = [Radiobutton(),Radiobutton(),Radiobutton(),Radiobutton()]
+
+
+for text, mode in FINGERS_MODE_LIST:
+    radioButFingers[radi_butt_index] = Radiobutton(root, text=text, variable=finger_control_variable, value=mode)
+    radioButFingers[radi_butt_index].place(x=slider_group_x_offset+240, y=slider_group_y_offset + 15 +
+                                                         radio_butt_offset*radi_butt_index)
+    radi_butt_index += 1
+
+radioButFingers[2].select()    #Select initialy the lock position
+finger_control_variable.trace("w", finger_control_mode)
 
 def read():
     '''  '''
 #    pass
     global routine_event_cv
-    while 1:
+    while threads_on:
         cmd_read = ser_read.readline()
         cmd_read_decoded = cmd_read.decode('utf-8')
         print(cmd_read_decoded)
@@ -434,33 +546,26 @@ def read():
                 print("No waiting task")
 
 
-def send(cmd_write):
-    '''  '''
-#    pass
-    if cmd_write[0] == " ":
-        cmd_write = cmd_write[1:]
-    else:
-        pass
-
-    with send_lock:
-        ser_write.write(cmd_write.encode())
-        print(cmd_write)
-
-
-
-
 
 if __name__ == '__main__':
 
-    #t1_write = Thread(target = write)
     t2_read = Thread(target = read)
     t2_read.start()
-    #t1_write.start()
+
+
+    root.mainloop()
+    root.destroy()
+
+    #t1_write.join()
+    threads_on = False;
+    t2_read.join()
+
+
+if __name__ == '__test__':
 
     send = dummy_send
     root.mainloop()
     root.destroy()
 
     #t1_write.join()
-
-    t2_read.join()
+    threads_on = False;
