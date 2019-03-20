@@ -21,9 +21,15 @@
 #define MOVING_CNT_BEFORE_TRIGGER 300
 #define NUMBER_OF_AXIS            4   //+ 1 because there is no axis 0
 
+#define GUI                       "GUI"   //The mode to control the fingers of the end effector
+#define FREE                      "FREE"
+#define GLOVE                     "GLOVE"
+#define LOCK                      "LOCK"
+
 //Global variables
 String cmd[64]={"begin","57600"};
-String cmd_tx[20];              //String to send to the motor after computing
+String cmd_tx[20];                //String to send to the motor after computing
+String present_finger_mode = "";  // Actual control mode for the fingers
 
 Axis *Axis_table[NUMBER_OF_AXIS];
 
@@ -47,7 +53,7 @@ void read_radio(void);
 void torque_control(Axis * axis);
 void fix_com(void);
 void ack_msg(void);
-
+void change_finger_control_mode(String new_mode);
 
 // Initialisation
 void setup()
@@ -94,6 +100,7 @@ void loop()
   MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes             
 
 //  bool test = Axis_table[1]->HomeRequest(&MinLS[1]); // Test homing Command
+  
   //Read message
   read_serial();
   read_radio();
@@ -126,6 +133,7 @@ if( Axis_table[3]->Sts_Homing == 1)
   {
     torque_control(Axis_table[axis_index]);
   }
+  // Finger control
   
 }
 
@@ -331,34 +339,39 @@ void read_serial(void)
         {
           axis->torqueControlEnable = true;
         }
-    } 
+      
+        /* Finger control message */
+
+        else if (cmd[0] == "finger_mode")
+        {
+            change_finger_control_mode(cmd[1]);
+        }
+      } 
     }   
 }
-void convertAngle(String* cmd)
-{ /*
-        int temp = cmd[1].toInt();
-        temp= temp*4095/360;
-        cmd[1] = String(temp); 
 
-        if (cmd[0] == "torque_control_disable")
-        {
-          axis->torqueControlEnable = false;
-        }
-        
-        else 
-          {
-            dynamixel_command(cmd);
-          }
-        
-      
-      else 
-      {
-         dynamixel_command(cmd);
-      }
-    }*/
 
+void change_finger_control_mode(String new_mode)
+{
+  if(new_mode == LOCK)
+  {
+    present_finger_mode = LOCK;
+  }
+  else if(new_mode == FREE)
+  {
+    present_finger_mode = FREE;
+  }
+  else if(new_mode == GUI)
+  {
+    present_finger_mode = GUI;
+  }
+  else if(new_mode == GLOVE)
+  {
+    present_finger_mode = GLOVE;
+  }
+  else
+  {/* NOP */}
 }
-
 
 void fix_com(void)
 {
@@ -374,3 +387,25 @@ void ack_msg(void)
 {
   Serial.println("nolidge");
 }
+
+void finger_control(int finger_number)
+{
+  if(present_finger_mode == LOCK)
+  {
+    /* do nothing and keep last position */
+  }
+  else if (present_finger_mode == FREE)
+  {
+    /* Set the PWM to 0 to disable the serrvo*/
+  }
+    else if (present_finger_mode == GLOVE)
+  {
+    /* Read the commands sent by radio*/
+  }
+    else if (present_finger_mode == GUI)
+  {
+    /* Read the last command sent by the GUI*/
+  }
+  
+}
+
