@@ -7,6 +7,8 @@
 #include <DynamixelWorkbench.h>
 #include "p_monitor.h"
 #include "Axis.h"
+#include "HandControl.h"
+
 
 #if defined(__OPENCM904__)
   #define DEVICE_NAME "3" //Dynamixel on Serial3(USART3)  <-OpenCM 485EXP
@@ -20,16 +22,15 @@
 #define TORQUE_CNT_BEFORE_TRIGGER 150
 #define MOVING_CNT_BEFORE_TRIGGER 150
 #define NUMBER_OF_AXIS            4   //+ 1 because there is no axis 0
+#define NUMBER_OF_FINGERS         3
 
-#define GUI                       "GUI"   //The mode to control the fingers of the end effector
-#define FREE                      "FREE"
-#define GLOVE                     "GLOVE"
-#define LOCK                      "LOCK"
+#define FINGER1_PIN               
 
 //Global variables
 String cmd[64]={"begin","57600"};
 String cmd_tx[20];                //String to send to the motor after computing
-String present_finger_mode = "";  // Actual control mode for the fingers
+
+HandControl hand_control(NUMBER_OF_FINGERS);
 
 Axis *Axis_table[NUMBER_OF_AXIS];
 
@@ -357,6 +358,11 @@ void read_serial(void)
         {
             change_finger_control_mode(cmd[1]);
         }
+        else if (cmd[0] == "finger_move")
+        {
+          /* Read the PWM value from gui for a specific finger */
+          hand_control.setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
+        }
       } 
     }   
 }
@@ -364,21 +370,21 @@ void read_serial(void)
 
 void change_finger_control_mode(String new_mode)
 {
-  if(new_mode == LOCK)
+  if(new_mode == "LOCK")
   {
-    present_finger_mode = LOCK;
+    hand_control.setMode(LOCK);
   }
-  else if(new_mode == FREE)
+  else if(new_mode == "FREE")
   {
-    present_finger_mode = FREE;
+    hand_control.setMode(FREE);
   }
-  else if(new_mode == GUI)
+  else if(new_mode == "GUI")
   {
-    present_finger_mode = GUI;
+    hand_control.setMode(GUI);
   }
-  else if(new_mode == GLOVE)
+  else if(new_mode == "GLOVE")
   {
-    present_finger_mode = GLOVE;
+    hand_control.setMode(GLOVE);
   }
   else
   {/* NOP */}
@@ -401,22 +407,24 @@ void ack_msg(void)
 
 void finger_control(int finger_number)
 {
-  if(present_finger_mode == LOCK)
+  if( hand_control.getMode() == LOCK)
   {
     /* do nothing and keep last position */
   }
-  else if (present_finger_mode == FREE)
+  else if (hand_control.getMode() == FREE)
   {
     /* Set the PWM to 0 to disable the serrvo*/
   }
-    else if (present_finger_mode == GLOVE)
+    else if (hand_control.getMode() == GLOVE)
   {
     /* Read the commands sent by radio*/
+    hand_control.getFingerGloveValue(finger_number);
   }
-    else if (present_finger_mode == GUI)
+    else if (hand_control.getMode() == GUI)
   {
     /* Read the last command sent by the GUI*/
+      hand_control.getFingerGuiValue(finger_number);
   }
-  
 }
+
 
