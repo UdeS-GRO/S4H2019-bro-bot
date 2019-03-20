@@ -10,16 +10,17 @@
 
 RF24 radio(7, 8); // CE, CSN
 const byte address[6] = "gant0";
-int flexsensorRange[2][1]= {{45},
-                            {77}};
+int flexsensorRange[2][3]= {{45,45,45},
+                            {77,77,77}};
 
-Servo index;
-int angles[1];                              //array for storing servo angles
+Servo thumb, index, middle;
+int angles[3];                              //array for storing servo angles
 int val;
 String finger_value_str = "";
 float finger_value = 0;
 float finger[5];
 float finger_id;
+int flexPins[] = {A0,A1,A2};
 
 void setup() {
   Serial.begin(9600);
@@ -27,52 +28,55 @@ void setup() {
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
-   index.attach(5);
+  thumb.attach(5);
+  index.attach(6);
+  middle.attach(7);
 }
 void loop() {
-  if (radio.available()) {
-    char text[50] = "";
-    radio.read(&text, sizeof(text));
-    int id = int(text[7])-48;
-    
-    int ii = 9;
-    finger_value_str = "";
-    while(text[ii] != '\0'){
-      finger_value_str += text[ii];
-      ii += 1;
-    }
-    Serial.println(text);
-    Serial.println(finger_value_str);
-    finger_value = finger_value_str.toFloat();
-    Serial.println(finger_value);
-    motor_control(finger_value);
-    //finger_id[id] = finger_value;
-    
-    //Serial.println("finger value" + finger[0]);
-    /*int ii = 0;
-    while(text[ii] != "_"){
-      Serial.println(text[ii] + "pas de _!");
-      ii = ii+1;
-      delay(100);
-    }
-    int jj = ii+2;
-    while(text[jj] != '\n'){
-      Serial.println("pas de backslash 0!");
-      finger_value_str = finger_value_str + text[jj];
-      jj = jj+1;
-    }
-    float finger_value = 0;
-    Serial.println("finger value avant conversion" + finger_value_str);
-    finger_value = finger_value_str.toFloat();
-    Serial.println(finger_value);
-    finger[int(text[ii+1])] = finger_value;
-    Serial.println(int(text[ii+1]));
-    delay(1000);
-    */
+  for(int i=0; i<3; i+=1)
+    if (radio.available()) {
+      char text[50] = "";
+      radio.read(&text, sizeof(text));
+      int id = int(text[7])-48;
+      
+      int ii = 9;
+      finger_value_str = "";
+      while(text[ii] != '\0'){
+        finger_value_str += text[ii];
+        ii += 1;
+      }
+      Serial.println(text);
+      Serial.println(finger_value_str);
+      finger_value = finger_value_str.toFloat();
+      Serial.println(finger_value);
+      motor_control(finger_value,i);
+      //finger_id[id] = finger_value;
+      
+      //Serial.println("finger value" + finger[0]);
+      /*int ii = 0;
+      while(text[ii] != "_"){
+        Serial.println(text[ii] + "pas de _!");
+        ii = ii+1;
+        delay(100);
+      }
+      int jj = ii+2;
+      while(text[jj] != '\n'){
+        Serial.println("pas de backslash 0!");
+        finger_value_str = finger_value_str + text[jj];
+        jj = jj+1;
+      }
+      float finger_value = 0;
+      Serial.println("finger value avant conversion" + finger_value_str);
+      finger_value = finger_value_str.toFloat();
+      Serial.println(finger_value);
+      finger[int(text[ii+1])] = finger_value;
+      Serial.println(int(text[ii+1]));
+      delay(1000);
+      */
   }
 }
-  void motor_control(float finger){
-  for(int i=0; i<1; i+=1){                        //repeat process for each of the 5 fingers
+  void motor_control(float finger, int i){
+                          //repeat process for each of the 5 fingers
     /* 
      * The following if and else if pair of statements are because 2 of the servos are orientated in reverse to the other 3 (see youtube video around 5:11 minute mark)
      * As such depending on which servo is being written to the angle may need to be reversed. 
@@ -88,8 +92,10 @@ void loop() {
     angles[i]=constrain(angles[i], 0, 180);       //any values above/below the maximum/minimum calibration value are reset to the highest/lowest value within the acceptable range
     Serial.print(angles[i]);
     Serial.print('\t');     
-    if(i==0){index.write(angles[i]);}             //move servos to set angles
-    }
+    if(i==0){thumb.write(angles[i]);}             //move servos to set angles
+    if(i==1){index.write(angles[i]);}
+    if(i==2){middle.write(angles[i]);}
+    
     Serial.println();
     delay(100);
   }
