@@ -17,8 +17,8 @@
 //Constant declarations and definitions
 #define TORQUE_COUNTER_REFERENCE  0
 #define TORQUE_MAX_DIFFERENCE     40
-#define TORQUE_CNT_BEFORE_TRIGGER 300
-#define MOVING_CNT_BEFORE_TRIGGER 300
+#define TORQUE_CNT_BEFORE_TRIGGER 150
+#define MOVING_CNT_BEFORE_TRIGGER 150
 #define NUMBER_OF_AXIS            4   //+ 1 because there is no axis 0
 
 #define GUI                       "GUI"   //The mode to control the fingers of the end effector
@@ -74,6 +74,12 @@ void setup()
     Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
 
+    Axis_table[2]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
+    Axis_table[2]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
+    
+    Axis_table[3]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
+    Axis_table[3]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
+
     // Pinout Attribution for Limit Swtiches
     pinMode(inMinLS01, INPUT);
     pinMode(inMaxLS01, INPUT);
@@ -114,18 +120,18 @@ void loop()
       stopBySwitch(Axis_table[axis_index]);
     }
   }*/
-
-// Juste pour faire des tests
-if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)
-{ 
-  Serial.println("Wouhou! it is working !!");
-  stopBySwitch(Axis_table[3]);
-}
-
-if( Axis_table[3]->Sts_Homing == 1)
-{
-  Axis_table[3]->HomeRequest(&MinLS[1]);
-}
+//
+//// Juste pour faire des tests
+//if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)
+//{ 
+//  Serial.println("Wouhou! it is working !!");
+//  stopBySwitch(Axis_table[3]);
+//}
+//
+//if( Axis_table[3]->Sts_Homing == 1)
+//{
+//  Axis_table[3]->HomeRequest(&MinLS[1]);
+//}
 
 
   //Computing
@@ -155,8 +161,9 @@ void torque_control(Axis * axis)
     {
       /*Verify if something tries to force against the motor */
      triggered = axis->torque_counter_filter->compute(present_load_f);        //test#0
-//     Serial.print("Torque_cnt: ");                                          //test: counter
-//     Serial.println(axis->torque_counter_filter->counter);
+     //Serial.print("Torque_cnt: ");                                          //test: counter
+     //Serial.println(present_load_f);
+     //Serial.println(axis->torque_counter_filter->counter);
       if(triggered)
       {
         axis->moving_counter_filter->reset_counter();
@@ -338,6 +345,10 @@ void read_serial(void)
         else if (cmd[0] == "torque_control_enable")
         {
           axis->torqueControlEnable = true;
+        }
+        else if (cmd[0] == "torque_control_disable")
+        {
+          axis->torqueControlEnable = false;
         }
       
         /* Finger control message */
