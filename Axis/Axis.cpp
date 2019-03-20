@@ -430,7 +430,8 @@ int Axis::getTorque()
 	
 	if (model == 350)
 	{
-		Sts_ActualTorque = int(dxl.convertValue2Load(readRegister("Present_Current")));
+		short actual_current = readRegister("Present_Current");
+		Sts_ActualTorque = actual_current;
 	}
 	else if (model == 250)
 	{
