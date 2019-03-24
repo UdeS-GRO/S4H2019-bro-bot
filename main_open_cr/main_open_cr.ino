@@ -149,6 +149,12 @@ void loop()
   {
     finger_control(finger_index);
   }
+
+  // Moveto control
+  for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+  {
+    //torque_control(Axis_table[axis_index]);
+  }
 }
 
 void stopBySwitch(Axis * axis)
@@ -370,7 +376,11 @@ void read_serial(void)
       {
         /* Read the PWM value from gui for a specific finger */
         hand_control.setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
-      } 
+      }
+      else if (cmd[0] == "stop")
+      {
+        
+      }
     }   
 }
 
@@ -440,13 +450,13 @@ void finger_control(int finger_number)
   {
     /* Read the commands sent by radio*/
     new_PWM_cmd = hand_control.getFingerGloveValue(finger_number);
-    Serial.println(String("Radio:" +String(new_PWM_cmd)));       //TODO :Add the pwm control
+    //Serial.println(String("Radio:" +String(new_PWM_cmd)));       //TODO :Add the pwm control
   }
     else if (hand_control.getMode() == GUI)
   {
     /* Read the last command sent by the GUI*/
      new_PWM_cmd = hand_control.getFingerGuiValue(finger_number);
-     Serial.println(String("GUI:" +String(new_PWM_cmd)));      //TODO :Add the pwm control
+     //Serial.println(String("GUI:" +String(new_PWM_cmd)));      //TODO :Add the pwm control
   }
 }
 

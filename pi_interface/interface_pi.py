@@ -324,6 +324,11 @@ def play():
                 routine_event_cv.clear()
                 routine_event_cv.wait(15)         #Wait the nolidge flag or wait 20 seconds
 
+def stop(event):
+    stop_func()
+
+def stop_func():
+    pass
 
 def execute(event):
     '''  '''
@@ -449,6 +454,9 @@ butExecute.place(x = 485, y = 196)
 instructEntry = Entry(root)
 instructEntry.place(x = 585, y = 160)
 
+# butStop = Button(root, height=5, width=15, text = "STOP", bg="red")
+# butStop.bind("<Button-1>", stop)
+# butStop.place(x = 610, y = 196)
 
 routine.insert(INSERT, "x")
 
