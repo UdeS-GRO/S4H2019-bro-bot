@@ -6,11 +6,20 @@
 
 #include "HandControl.h"
 
+/**
+* Constructor of the Handcontrol class
+*
+* Initialize the size of the finger data arrays and the mode to the FREE mode
+*
+* @param The new mode.
+* @return Nothing.
+*/
 HandControl::HandControl(int number_of_fingers)
 {
 	finger_gui_cmd_ = new int[number_of_fingers];
 	finger_glove_cmd_ = new int[number_of_fingers];
 	mode = FREE;
+	nb_of_finger = number_of_fingers;
 
 	int index;
 	for (index = 0; index < number_of_fingers; index++)
@@ -60,7 +69,10 @@ ControlFingerState HandControl::getMode(void)
 */
 void HandControl::setFingerGuiValue(int finger_number, int new_value)
 {
-	finger_gui_cmd_[finger_number - 1] = new_value;
+	if ((finger_number > 0) && (finger_number <= nb_of_finger))
+	{
+		finger_gui_cmd_[finger_number - 1] = new_value;
+	}
 }
 
 /**
@@ -72,7 +84,10 @@ void HandControl::setFingerGuiValue(int finger_number, int new_value)
 */
 int HandControl::getFingerGuiValue(int finger_number)
 {
-	return finger_gui_cmd_[finger_number - 1];
+	if ((finger_number > 0) && (finger_number <= nb_of_finger))
+	{
+		return finger_gui_cmd_[finger_number - 1];
+	}
 }
 
 /**
@@ -86,7 +101,10 @@ int HandControl::getFingerGuiValue(int finger_number)
 */
 void HandControl::setFingerGloveValue(int finger_number, int new_value)
 {
-	finger_glove_cmd_[finger_number - 1] = new_value;
+	if ((finger_number > 0) && (finger_number <= nb_of_finger))
+	{
+		finger_glove_cmd_[finger_number - 1] = new_value;
+	}
 }
 
 /**
@@ -98,5 +116,8 @@ void HandControl::setFingerGloveValue(int finger_number, int new_value)
 */
 int HandControl::getFingerGloveValue(int finger_number)
 {
-	return finger_glove_cmd_[finger_number - 1];
+	if ((finger_number > 0) && (finger_number <= nb_of_finger))
+	{
+		return finger_glove_cmd_[finger_number - 1];
+	}
 }

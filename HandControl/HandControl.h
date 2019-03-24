@@ -23,7 +23,7 @@ class HandControl
 private:
 	int* finger_gui_cmd_;
 	int* finger_glove_cmd_;
-
+	int nb_of_finger;
 	ControlFingerState mode;
 
 public:
