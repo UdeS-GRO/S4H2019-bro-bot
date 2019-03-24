@@ -4,10 +4,10 @@
  * https://www.instructables.com/id/How-to-upload-codes-to-Lilypad-Arduino-Without-FTD/
  */
  
-int fingerPins[1]={A0};         //order of finger connections from thumb to pinky (ie: A0=thumb, A1=index,...etc.)
-int fingerVals[1];                              //stores value of flex sensor on each finger
-const char *names[1]={"Thumb: "};
-int CalibrationVals[2][1];
+int fingerPins[3]={A0,A1,A2};         //order of finger connections from thumb to pinky (ie: A0=thumb, A1=index,...etc.)
+int fingerVals[3];                              //stores value of flex sensor on each finger
+const char *names[3]={"Thumb: ","Index: ", "Middle: "};
+int CalibrationVals[2][3];
 
 void setup() {
   Serial.begin(9600);                           //If you have issues with the baudrate and serial monitor see the Read Me file. 
@@ -33,7 +33,7 @@ void CalibrateFlexSensors(){
       delay(3000);
       Serial.println("Collecting maximum flex readings");
      }
-     for(int i=0; i<1; i++){
+     for(int i=0; i<3; i++){
       int readingCount=0;
       int readingSum=0;
       while(readingCount<10){                        //Take 10 unique readings
@@ -50,7 +50,7 @@ void CalibrateFlexSensors(){
   for(int i=0; i<2; i++){
     if(i==0){Serial.print("Minimum Offsets:\t");}
     else{Serial.print("Maximum Offsets:\t");}
-    for(int j=0; j<1; j++){
+    for(int j=0; j<3; j++){
       Serial.print(CalibrationVals[i][j]);
       Serial.print(", ");
     }  
