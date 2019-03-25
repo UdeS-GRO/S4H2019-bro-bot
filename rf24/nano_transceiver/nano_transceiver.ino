@@ -40,8 +40,9 @@ void setup() {
   float old_finger_0 = analogRead(THUMB_PIN);
   float old_finger_1 = analogRead(INDEX_PIN);
   float old_finger_2 = analogRead(MIDDLE_PIN);
-
+  
 }
+
 void loop() 
 {
   /* Read the sensors and build strings to send */
