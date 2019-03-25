@@ -225,20 +225,20 @@ void Axis::stopCmd()
 	moveAtSpeed("0");
 }
 
-void Axis::verifGoalAchieve(void) // Modifier les get pour la variable directement si modif de readStatus
+void Axis::verifGoalAchieve(void)
 {
-    if (getMovingStatus()!= 0)
+    if (Sts_Moving != 0)
     {
-        if(getVelocity() > 0) // verification si velocity a des valeurs positives ou négatives
+        if(Sts_ActualVelocity> 0) // verification si velocity a des valeurs positives ou négatives
         {
-            if (getPosition() >= (Sts_GoalPosition-2) || getPosition() >= MaxSoftlimit)
+            if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
             {
                 stopCmd();
             }
         }
         else
         {
-            if (getPosition() <= (Sts_GoalPosition+2) || getPosition() <= MinSoftlimit)
+            if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
             {
                 stopCmd();
             }
