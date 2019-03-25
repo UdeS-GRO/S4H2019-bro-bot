@@ -13,7 +13,7 @@ using namespace std;
 #include "counter_filter.h"
 #include "Arduino.h"
 
-enum blink_state 
+enum blink_state
 {
 	STOP_BLINK = 0,
 	GREEN_BLINK = 1,
@@ -59,6 +59,11 @@ public:
 	bool 	Sts_AtPosition;
 	bool 	Sts_Homed;
 	bool 	Sts_Homing;
+    bool 	Sts_Enabled;
+    int     Sts_GoalPosition;
+	//float 	HomeOffset = 0; Mis en commentaire puisque déjà dans private
+	bool    dontMoveBackward;
+	bool    dontMoveForward;
 
 
 	// ****************************
@@ -78,16 +83,19 @@ public:
 	// ***************************
 	// **** Moving Methods ****
 
-	void Zero();
+	//void Zero();
 	void HomeRequest(bool *HomeSW);
 	void stopCmd();
-	void moveTo(String cmd);
+	// moveTo(String cmd);
 	void moveAtSpeed(String cmd);
+	void verifGoalAchieve(void);
 
 
 	// ***********************************
 	// **** Set Parameters Methods ****
-
+    void setPermissionForward();
+	void setPermissionBackward();
+	void setGoalPosition(int goalP);
 	void setMaxSoftlimit(String cmd);
 	void setMinSoftlimit(String cmd);
 
@@ -103,10 +111,13 @@ public:
 	int	getCurrent();
 	int getTorque();
 	int	getVelocity();
-	int	getMovingStatus();
+	int getMovingStatus();
+	bool getPermissionForward();
+	bool getPermissionBackward();
+
 
 	void readStatus();
-	
+
 
 	// ****************************************
 	// **** Read/Write Register Methods ****
