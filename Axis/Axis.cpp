@@ -8,7 +8,7 @@
  * Fichier: Axis_Status.cpp
  * Auteurs: M.-A Martel
  * Date: 06 Fevrier 2019 (creation)
- * Description: 
+ * Description:
 ********/
 
 #include "Axis.h"
@@ -38,12 +38,14 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	Sts_Homed 	= 0;
 	Sts_Homing	= 0;
 	HomeOffset 	= 0;
+	dontMoveBackward  = 0 ;
+	dontMoveForward   = 0 ;
 
 	torque_counter_filter = NULL;
 	moving_counter_filter = NULL;
 
 	if ((new_model == 350) or (new_model == 250))
-	{ 
+	{
 		model = new_model;
 	}
 	else
@@ -119,6 +121,10 @@ void Axis::Enable()
 			Serial.println(log);
 		}
 	}
+	if(result)
+	{
+		Sts_Enabled = 1;
+	}
 }
 
 void Axis::Disable()
@@ -136,10 +142,15 @@ void Axis::Disable()
 			Serial.println(log);
 		}
 	}
+	if(result)
+	{
+		Sts_Enabled = 0;
+	}
 }
 
 // **************** Moving Methods ****************
 
+/*
 void Axis::Zero()
 {
 	result = dxl.jointMode(ID, 0, 0, &log);
@@ -172,13 +183,15 @@ void Axis::Zero()
 		}
 	}
 }
+*/
 
 void Axis::HomeRequest(bool *HomeSW)
 {
 	Sts_Homed = 0;
 	HomeOffset = 0;
-	//writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
-	
+
+	//writeRegister("Homing_Offset", convertAngle2Value(HomeOffset));
+
 	if(Sts_Homing == 0)
 	{
 		moveAtSpeed(String(-50));
@@ -188,13 +201,22 @@ void Axis::HomeRequest(bool *HomeSW)
 
 	if(*HomeSW)
 	{
-		moveAtSpeed(String(0));
-		HomeOffset = 0 - Sts_ActualPosition;
-		Serial.println(HomeOffset);
-		//writeRegister("Home_Offset", convertAngle2Value(HomeOffset));
+		stopCmd();
+		if (getMovingStatus() == 0)
+        {
+			HomeOffset = 0 - getPosition();
+			Sts_Homing = 0;
+			Sts_Homed = 1;
+			Serial.println(log);
+			Serial.println("Home Offset =");
+			Serial.println(HomeOffset);
+			Serial.println("Actual Pos =");
+			Serial.println(Sts_ActualPosition);
+		}
+		dontMoveBackward = 1;
 
-		Sts_Homing = 0;
-		Sts_Homed = 1;
+		//writeRegister("Homing_Offset", convertAngle2Value(HomeOffset));
+
 	}
 }
 
@@ -203,6 +225,28 @@ void Axis::stopCmd()
 	moveAtSpeed("0");
 }
 
+void Axis::verifGoalAchieve(void)
+{
+    if (Sts_Moving != 0)
+    {
+        if(Sts_ActualVelocity> 0) // verification si velocity a des valeurs positives ou négatives
+        {
+            if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
+            {
+                stopCmd();
+            }
+        }
+        else
+        {
+            if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
+            {
+                stopCmd();
+            }
+        }
+    }
+}
+
+/*
 void Axis::moveTo(String cmd)
 {
 	uint16_t position = cmd.toInt();
@@ -215,7 +259,7 @@ void Axis::moveTo(String cmd)
 	{
 		position = MinSoftlimit;
 	}
-	
+
 	result = dxl.jointMode(ID, 0, 0, &log);
 
 	if(debugMode == 1)
@@ -246,11 +290,36 @@ void Axis::moveTo(String cmd)
 		}
 	}
 }
+*/
 
 void Axis::moveAtSpeed(String cmd)
 {
 
 	int32_t vitesse  = cmd.toInt();
+
+    if (vitesse < 0)
+	{
+			dontMoveForward = 0;
+
+			if (dontMoveBackward)
+					{
+							Serial.println ("You can't move backward");
+							return;
+					}
+
+	}
+
+	if (vitesse > 0)
+	{
+			dontMoveBackward = 0;
+
+			if (dontMoveForward)
+					{
+							Serial.println("You can't move Forward");
+							return;
+					}
+
+	}
 
 	result = dxl.wheelMode(ID, 0, &log);
 
@@ -285,6 +354,21 @@ void Axis::moveAtSpeed(String cmd)
 
 // **************** Set Parameters Methods ****************
 
+void Axis::setPermissionForward()
+{
+    dontMoveForward = 1;
+}
+
+void Axis::setPermissionBackward()
+{
+    dontMoveBackward = 1;
+}
+
+void Axis::setGoalPosition(int goalP)
+{
+    Sts_GoalPosition = goalP;
+}
+
 void Axis::setMaxSoftlimit(String cmd)
 {
 	int32_t value = cmd.toInt();
@@ -293,7 +377,7 @@ void Axis::setMaxSoftlimit(String cmd)
 	{
 		MaxSoftlimit = value;
 		writeRegister("Max_Position_Limit", value);
-		
+
 		if(debugMode == 1)
 		{
 			Serial.println('Succed to set Maximum Softlimit');
@@ -316,7 +400,7 @@ void Axis::setMinSoftlimit(String cmd)
 	{
 		MinSoftlimit = value;
 		writeRegister("Min_Position_Limit", value);
-		
+
 		if(debugMode == 1)
 		{
 			Serial.println('Succed to set Minimum Softlimit');
@@ -389,18 +473,24 @@ void Axis::readStatus()
 	dummy = getTorque();
 	dummy = getVelocity();
 	dummy = getMovingStatus();
-
 }
 
 int Axis::getPosition()
 {
-	Sts_ActualPosition = convertValue2Angle(readRegister("Present_Position"));
+	Sts_ActualPosition = (convertValue2Angle(readRegister("Present_Position")));
 
 	if(Sts_ActualPosition>360)
 	{
 		float temp = (Sts_ActualPosition/360)-(int(Sts_ActualPosition/360));
 		Sts_ActualPosition = (temp*360);
 	}
+	else if((-1*Sts_ActualPosition)>360)
+	{
+		Sts_ActualPosition = -1*Sts_ActualPosition;
+		float temp = (Sts_ActualPosition/360)-(int(Sts_ActualPosition/360));
+		Sts_ActualPosition = (-1*temp*360);
+	}
+	Sts_ActualPosition = Sts_ActualPosition + HomeOffset;
 
 	if(debugMode == 1)
 	{
@@ -427,7 +517,7 @@ int Axis::getCurrent()
 
 int Axis::getTorque()
 {
-	
+
 	if (model == 350)
 	{
 		short actual_current = readRegister("Present_Current");
@@ -437,7 +527,7 @@ int Axis::getTorque()
 	{
 		Sts_ActualTorque = int(readRegister("Present_Load"));
 	}
-	else 
+	else
 	{
 		Serial.println("Model unknow: can not get torque");
 	}
@@ -485,6 +575,42 @@ int Axis::getMovingStatus()
 	return Sts_Moving;
 }
 
+bool Axis::getPermissionForward()
+{
+
+    if (debugMode == 1)
+        {
+            if(dontMoveForward)
+            {
+                Serial.println("Can't move Forward");
+            }
+
+            else
+            {
+                Serial.println("You can move Forward");
+            }
+        }
+    return dontMoveForward;
+}
+
+bool Axis::getPermissionBackward()
+{
+
+    if (debugMode == 1)
+        {
+            if(dontMoveBackward)
+            {
+                Serial.println("Can't move Forward");
+            }
+
+            else
+            {
+                Serial.println("You can move Forward");
+            }
+        }
+    return dontMoveBackward;
+}
+
 // **************** Read/Write Register Methods ****************
 
 int Axis::readRegister(String regName)
@@ -514,7 +640,16 @@ int Axis::readRegister(String regName)
 
 void Axis::writeRegister(String regName, int32_t value)
 {
-	int result = dxl.writeRegister(ID, regName.c_str(), value, &log);
+	if(Sts_Enabled)
+	{
+		Disable();
+		int result = dxl.writeRegister(ID, regName.c_str(), value, &log);
+		Enable();
+	}
+	else
+	{
+		int result = dxl.writeRegister(ID, regName.c_str(), value, &log);
+	}
 
 	if(debugMode == 1)
 	{

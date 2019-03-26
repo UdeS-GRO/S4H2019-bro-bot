@@ -56,6 +56,8 @@ void fix_com(void);
 void ack_msg(void);
 void change_finger_control_mode(String new_mode);
 void finger_control(int finger_number);
+void limitSwitch(void);
+void stopBySwitch(Axis * axis);
 
 // Initialisation
 void setup()
@@ -100,46 +102,19 @@ void loop()
   //Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
-  MinLS[1] = digitalRead(inMinLS01);
- /* MinLS[2] = digitalRead(inMinLS02);
-  MinLS[3] = digitalRead(inMinLS03);
-  MaxLS[1] = digitalRead(inMaxLS01);
-  MaxLS[2] = digitalRead(inMaxLS02);
-  MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes             
-
-//  bool test = Axis_table[1]->HomeRequest(&MinLS[1]); // Test homing Command
+  limitSwitch();           
   
   //Read message
   read_serial();
   read_radio();
 
-// stoping by limit switch
-/*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)      // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
-  {
-    if (MinLS[axis_index] || MaxLS[axis_index])
-    {
-      Serial.print("that is weird");
-      stopBySwitch(Axis_table[axis_index]);
-    }
-  }*/
-//
-//// Juste pour faire des tests
-//if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)
-//{ 
-//  Serial.println("Wouhou! it is working !!");
-//  stopBySwitch(Axis_table[3]);
-//}
-//
-//if( Axis_table[3]->Sts_Homing == 1)
-//{
-//  Axis_table[3]->HomeRequest(&MinLS[1]);
-//}
 
 
   //======Computing======
   // Torque control
   for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
+    Axis_table[axis_index]->verifGoalAchieve(); // faire un mode debug
     torque_control(Axis_table[axis_index]);
   }
 
@@ -246,14 +221,8 @@ void read_serial(void)
         
         axis = Axis_table[ID];
       
-      
-        if(cmd[0] == "joint")
-          { 
-             int temp = cmd[2].toInt()*4095/360;
-             cmd[2] = String(temp);
-             axis->moveTo(cmd[2]);
-          }  
-        else if(cmd[0] == "zero")
+       
+         if(cmd[0] == "zero")
          {
             //axis->Zero();
             axis->HomeRequest(&MinLS[1]);
@@ -292,69 +261,19 @@ void read_serial(void)
          {
             axis->getVelocity();
          }
-        else if(cmd[0] == "movefrom")
-         {
-            int startpos = axis->getPosition();
-            int depPos   = cmd[2].toInt();
-            int endpos = depPos+startpos;
-            if (endpos > 360)
-            {
-              endpos-=360;
-              axis->moveAtSpeed("-100");
-              while(1)
-              {
-                if(axis->getPosition() <= endpos)
-                {
-                  axis->moveAtSpeed("0");
-                  break;
-                }
-              }
-              
-            }
-            else
-            {
-              axis->moveAtSpeed("100");
-              while(1)
-              {
-                if(axis->getPosition() >= endpos)
-                {
-                  axis->moveAtSpeed("0");
-                  break;
-                }
-              }
-            }
-           }
         else if(cmd[0] == "moveto")
          {
             int goalpos = cmd[2].toInt();
             Serial.println(goalpos);
+            axis->setGoalPosition(goalpos);   //idée comme ça, on utilise une 4e commende pour la vitesse voulue. On pourrait même setuper 3 vitesses prédéfini genre slow, medium, fast ****
+            if(goalpos < axis->getPosition())
+            {
+              axis->moveAtSpeed("-50");
+            }
             if(goalpos > axis->getPosition())
             {
-              axis->moveAtSpeed("100");
-              while(1)
-              {
-                if((axis->getPosition() >= (goalpos-2))||(axis->getPosition() >= axis->MaxSoftlimit))
-                {
-                   axis->moveAtSpeed("0");
-                   break;
-                }
-              }
+              axis ->moveAtSpeed("50");
             }
-            else
-            {
-              axis->moveAtSpeed("-100");
-              while(1)
-              {
-                if(axis->getPosition() <= (goalpos+2)||axis->getPosition()< axis->MinSoftlimit)
-                {
-                   axis->moveAtSpeed("0");
-                   break;
-                }
-              }
-            
-            }
-            //Position achieve. Send an ack flag to the py
-            ack_msg();
          }
         else if (cmd[0] == "torque_control_enable")
         {
@@ -460,4 +379,47 @@ void finger_control(int finger_number)
   }
 }
 
+void limitSwitch(void)
+{
+  // Limits Switch digital Read
+  MinLS[1] = digitalRead(inMinLS01);
+ /* MinLS[2] = digitalRead(inMinLS02);
+  MinLS[3] = digitalRead(inMinLS03);
+  MaxLS[1] = digitalRead(inMaxLS01);
+  MaxLS[2] = digitalRead(inMaxLS02);
+  MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  // stoping by limit switch
+/*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)      // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  {
+    if (MinLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0 || MaxLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0)
+    {
+      Serial.print("that is weird");
+      stopBySwitch(Axis_table[axis_index]);
+      if (MinLS[axis_index])
+        {
+          Axis_table[axis_index]->setAcceptationBackward;
+        }
+      if (MaxLS[axis_index])
+        {
+          Axis_table[axis_index]->setAcceptationForward;
+        }
+    }
+  }*/
 
+// Juste pour faire des tests
+  if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
+  { 
+    Serial.println("Wouhou! it is working !!");
+    stopBySwitch(Axis_table[3]);
+    Axis_table[3]->setPermissionForward();
+  }
+
+  /*for(int i=1;i<=NUMBER_OF_AXIS;i++)
+  {
+    if( Axis_table[i]->Sts_Homing == 1)
+    {
+     Axis_table[i]->HomeRequest(&MinLS[i]);
+    }
+  }*/
+
+}
