@@ -22,6 +22,15 @@ using namespace std;
 
 // **************** Class Constructor ****************
 
+/**
+* Constructor of the Axis class
+*
+* Initialize all the states of the motor to 0, the 2 soft limits and the motor according to his model.
+* It also check if the motor communicate with the OpenCR
+*
+* @param the ID of the motor, the baudrate, the model number, the minimum software limit and the maximum
+* @return Nothing.
+*/
 Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSoft)
 {
 	ID		= AxisID;
@@ -105,7 +114,13 @@ Axis::~Axis()
 // *****************************************************************************************************
 
 // **************** Enabling Methods ****************
-
+/**
+* Enable the motor by setting his torque on.
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::Enable()
 {
 	result = dxl.torqueOn(ID, &log);
@@ -126,7 +141,13 @@ void Axis::Enable()
 		Sts_Enabled = 1;
 	}
 }
-
+/**
+* Disable the motor by setting his torque off.
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::Disable()
 {
 	result = dxl.torqueOff(ID, &log);
@@ -184,6 +205,13 @@ void Axis::Zero()
 	}
 }
 */
+/**
+* Initialize the zero position of the motor by setting an offset to his position
+*
+*
+* @param a pointer to the bool of the switch (1 = switch pressed)
+* @return Nothing.
+*/
 
 void Axis::HomeRequest(bool *HomeSW)
 {
@@ -219,13 +247,25 @@ void Axis::HomeRequest(bool *HomeSW)
 
 	}
 }
-
+/**
+* Stop the motor from spinning
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::stopCmd()
 {
 	moveAtSpeed("0");
 }
-
-void Axis::verifGoalAchieve(void)
+/**
+* check if the motor achieve his goal position when moveto cmd is sent on the main_open_cr.ino
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
+void Axis::verifGoalAchieve()
 {
     if (Sts_Moving != 0)
     {
@@ -291,7 +331,15 @@ void Axis::moveTo(String cmd)
 	}
 }
 */
-
+/**
+* make the motor spin to a given speed. Negative = clockwise ***********VÉRIFIER CE STATEMENT
+* It also put the variable dontMoveForward or dontMoveBackward to zero depending on the sense the motor turns
+* This is to follow the event of a switch being activate and then forbiding to going in the sense the motor
+* was spinning
+*
+* @param string of a number representing a certain speed [ 1 unity is 0.229 rpm ]
+* @return Nothing.
+*/
 void Axis::moveAtSpeed(String cmd)
 {
 
@@ -353,22 +401,46 @@ void Axis::moveAtSpeed(String cmd)
 }
 
 // **************** Set Parameters Methods ****************
-
+/**
+* By setting dontMoveForward to 1, this fonction forbid the motor to go anti-clockwise ************ à VÉRIFIER
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::setPermissionForward()
 {
     dontMoveForward = 1;
 }
-
+/**
+* By setting dontMoveBackward to 1, this fonction forbid the motor to go clockwise ************ à VÉRIFIER
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::setPermissionBackward()
 {
     dontMoveBackward = 1;
 }
-
+/**
+* Set the goal position in degrees according to the home offset of the fct HomeRequest
+*
+*
+* @param the desired position in degrees
+* @return Nothing.
+*/
 void Axis::setGoalPosition(int goalP)
 {
     Sts_GoalPosition = goalP;
 }
-
+/**
+* Set the new maximum software limit to the motor
+*
+*
+* @param the desired new max soft limit in degrees
+* @return Nothing.
+*/
 void Axis::setMaxSoftlimit(String cmd)
 {
 	int32_t value = cmd.toInt();
@@ -391,6 +463,13 @@ void Axis::setMaxSoftlimit(String cmd)
 		}
 	}
 }
+/**
+* Set the new minimum software limit to the motor
+*
+*
+* @param the desired new min soft limit in degrees
+* @return Nothing.
+*/
 
 void Axis::setMinSoftlimit(String cmd)
 {
@@ -416,6 +495,15 @@ void Axis::setMinSoftlimit(String cmd)
 	}
 }
 
+/**
+* Set a new counter from counter_filter.h.
+* Used to trigger the torque off after a certain amount of time of applying an external torque.
+* At this moment, the motor is easily manageable for teaching for instance.
+*
+* @param reference of a normal torque without external force, the maximum difference between the reference
+*         and the actual torque to exceed for the counter to add up. The number to reach by the counter to trigger the action.
+* @return Nothing.
+*/
 void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
 {
 	if (torque_counter_filter != NULL)
@@ -425,6 +513,15 @@ void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new
 	torque_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
+/**
+* Set a new counter from counter_filter.h.
+* Used to trigger the torque on after a certain amount of time of NOT applying an external torque.
+* At this moment, the motor isn't easily manageable anymore and can now receive new command.
+*
+@param reference of a normal torque without external force, the maximum difference between the reference
+*         and the actual torque to exceed for the counter to add up. The number to reach by the counter to trigger the action.
+* @return Nothing.
+*/
 void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new_counterBeforeTrigger)
 {
 	if (moving_counter_filter != NULL)
@@ -434,6 +531,13 @@ void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new
 	moving_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
+/**
+* Set the LED to blink or not. We use it to show when the motor is in teaching mode after the trigger of the torque_counter_filter
+*
+*
+* @param new blink state(on/off), the time the LED is on for each blink
+* @return Nothing.
+*/
 void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 {
 	bool led_status = readRegister("LED");
@@ -464,7 +568,13 @@ void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 }
 
 // **************** Read Paramters Methods ****************
-
+/**
+* Read the actual status of the position, Current, torque, velocity and the moving status of the motor
+*
+*
+* @param Nothing
+* @return Nothing.
+*/
 void Axis::readStatus()
 {
 	int dummy = 0;
@@ -474,6 +584,13 @@ void Axis::readStatus()
 	dummy = getVelocity();
 	dummy = getMovingStatus();
 }
+/**
+* Get the actuel position of the motor in degrees according to the home offset of the fct HomeRequest
+*
+*
+* @param Nothing
+* @return the actual Position [degrees]
+*/
 
 int Axis::getPosition()
 {
@@ -500,7 +617,13 @@ int Axis::getPosition()
 
 	return Sts_ActualPosition;
 }
-
+/**
+* Get the actual current of the motor. Used with the torque control of the 350 model
+*
+*
+* @param Nothing
+* @return the actual current [1 unit = 2.69 [mA] ]
+*/
 int Axis::getCurrent()
 {
 	Sts_ActualCurrent = dxl.convertValue2Current(readRegister("Present_Current"));
@@ -514,7 +637,13 @@ int Axis::getCurrent()
 
 	return Sts_ActualCurrent;
 }
-
+/**
+* Get the actual torque of the motor. Used with the torque control of the 250 model
+*
+*
+* @param Nothing
+* @return actual torque [1 unit = 0.1%]
+*/
 int Axis::getTorque()
 {
 
@@ -542,6 +671,14 @@ int Axis::getTorque()
 	return Sts_ActualTorque;
 }
 
+/**
+* Get the actual velocity of the motor.
+*
+*
+* @param Nothing
+* @return actual velocity [1 unit = 0.229 [rev/min]]
+*/
+
 int Axis::getVelocity()
 {
 	Sts_ActualVelocity = dxl.convertValue2Velocity(ID,readRegister("Present_Velocity"));
@@ -555,6 +692,13 @@ int Axis::getVelocity()
 
 	return Sts_ActualVelocity;
 }
+/**
+* Get the actual moving status. If it is moving or not
+*
+*
+* @param Nothing
+* @return actual moving status. Even if its a int, it's either 1 or 0
+*/
 
 int Axis::getMovingStatus()
 {
@@ -575,6 +719,13 @@ int Axis::getMovingStatus()
 	return Sts_Moving;
 }
 
+/**
+* Get the variable dontMoveForward. To know if the motor can move anti-clockwise ***********
+*
+*
+* @param Nothing
+* @return if it can or not move forward (1 = CAN'T)
+*/
 bool Axis::getPermissionForward()
 {
 
@@ -592,7 +743,13 @@ bool Axis::getPermissionForward()
         }
     return dontMoveForward;
 }
-
+/**
+* Get the variable dontMoveBackward. To know if the motor can move clockwise ***********
+*
+*
+* @param Nothing
+* @return if it can or not move backward (1 = CAN'T)
+*/
 bool Axis::getPermissionBackward()
 {
 
@@ -612,7 +769,13 @@ bool Axis::getPermissionBackward()
 }
 
 // **************** Read/Write Register Methods ****************
-
+/**
+* Function used in many other fct. Read the registers of the motor
+*
+*
+* @param the register to read
+* @return the data in the desired register
+*/
 int Axis::readRegister(String regName)
 {
 	int32_t data = 0;
@@ -637,7 +800,13 @@ int Axis::readRegister(String regName)
 
 	return data;
 }
-
+/**
+* Function used in many other fct. write in registers of the motor
+*
+*
+* @param the register in which you want to write and the value to write in.
+* @return Nothing
+*/
 void Axis::writeRegister(String regName, int32_t value)
 {
 	if(Sts_Enabled)
@@ -672,12 +841,23 @@ void Axis::writeRegister(String regName, int32_t value)
 // *****************************************************************************************************
 
 // **************** Convertion Methods ****************
-
+/**
+* Convert the value of the register in degree
+*
+*
+* @param the value to convert
+* @return value converted in degrees
+*/
 float Axis::convertValue2Angle(int value)
 {
     return (value*360/4095);
 }
-
+/**
+* Convert the value in degrees into the value suitable for the register. Used when writing in register
+*
+* @param the angle to convert
+* @return the value suitable for the register
+*/
 int Axis::convertAngle2Value(float angle)
 {
     return (angle*4095/360);
