@@ -10,8 +10,11 @@
 
 RF24 radio(7, 8); // CE, CSN
 const byte address[6] = "gant0";
-int flexsensorRange[2][3]= {{45,45,45},
-                            {77,77,77}};
+//int flexsensorRange[2][3]= {{626,417,369},
+//                            {439,363,356}};
+
+int flexsensorRange[2][3]= {{20,20,369},
+                            {0,0,356}}; 
 
 Servo thumb, index, middle;
 int angles[3];                              //array for storing servo angles
@@ -28,16 +31,16 @@ void setup() {
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
-  thumb.attach(5);
-  index.attach(6);
-  middle.attach(7);
+  thumb.attach(2);
+  index.attach(3);
+  middle.attach(4);
 }
 void loop() {
-  for(int i=0; i<3; i+=1)
+  //for(int i=0; i<3; i+=1){
     if (radio.available()) {
       char text[50] = "";
       radio.read(&text, sizeof(text));
-      int id = int(text[7])-48;
+      int i = int(text[7])-48;
       
       int ii = 9;
       finger_value_str = "";
@@ -45,10 +48,11 @@ void loop() {
         finger_value_str += text[ii];
         ii += 1;
       }
-      Serial.println(text);
-      Serial.println(finger_value_str);
+      //Serial.println(text);
+      //Serial.println('\n');
+      //Serial.println(finger_value_str);
       finger_value = finger_value_str.toFloat();
-      Serial.println(finger_value);
+      //Serial.println(finger_value);
       motor_control(finger_value,i);
       //finger_id[id] = finger_value;
       
@@ -73,7 +77,9 @@ void loop() {
       Serial.println(int(text[ii+1]));
       delay(1000);
       */
-  }
+    }
+  //}
+  //delay(1000);
 }
   void motor_control(float finger, int i){
                           //repeat process for each of the 5 fingers
@@ -82,20 +88,29 @@ void loop() {
      * As such depending on which servo is being written to the angle may need to be reversed. 
      * The angles depend case by case basis of how you oreintate the servos and which fingers the fishing line goes to, change the code as needed
      */
-    if(i%2==0){ //                       
-      angles[i]=map(finger, flexsensorRange[0][i], flexsensorRange[1][i], 0, 180);   //maps the value measured from the flex sensor and outputs an angle for the servo within the range finger motion
-    }
-    else if(i%2!=0){
-      angles[i]=map(finger, flexsensorRange[0][i], flexsensorRange[1][i], 180, 0);
-    }
+    //angles[i]=map(finger, flexsensorRange[0][i], flexsensorRange[1][i], 0, 180);
+    //if(i == 0 || i == 2){ //                       
+    angles[i]=map(finger, flexsensorRange[0][i], flexsensorRange[1][i], 180, 0);   //maps the value measured from the flex sensor and outputs an angle for the servo within the range finger motion
+    //}
+    //else if(i == 1){
+    //  angles[i]=map(finger, flexsensorRange[0][i], flexsensorRange[1][i], 0, 180);
+    //}
     
     angles[i]=constrain(angles[i], 0, 180);       //any values above/below the maximum/minimum calibration value are reset to the highest/lowest value within the acceptable range
-    Serial.print(angles[i]);
-    Serial.print('\t');     
-    if(i==0){thumb.write(angles[i]);}             //move servos to set angles
-    if(i==1){index.write(angles[i]);}
-    if(i==2){middle.write(angles[i]);}
+    Serial.print(String(angles[i]) + " " + String(i));
+    Serial.print('\n');
+
+    for(i=0;i<3;i++){
+      if(i==0){
+        thumb.write(angles[i]);             //move servos to set angles
+      }
+      if(i==1){
+        index.write(angles[i]);
+      }
+      if(i==2){
+        middle.write(angles[i]);
+      }
+    }
     
-    Serial.println();
-    delay(100);
+    //Serial.println();
   }
