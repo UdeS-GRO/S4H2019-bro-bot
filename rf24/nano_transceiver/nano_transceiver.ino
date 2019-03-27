@@ -73,21 +73,22 @@ void read_sensor(void)
 
   //int finger_0 = lowpassFilter.input(analogRead(INDEX_PIN)); //Read voltage of the voltage divider of the index
   float finger_0 = analogRead(THUMB_PIN);
-  Serial.println("THUMB_PIN: " + String(finger_0) + "\n");
+  //Serial.println("THUMB_PIN: " + String(finger_0) + "\n");
   //finger_0 = filter_signal(finger_0, 5000);    //filtrage du signal RC a la freq specifiee 
-  //finger_0 = map(finger_0, 75, 50, 20, 0);
+  finger_0 = map(finger_0, 320, 750, 0, 20);
   
-  if(finger_0 < old_finger_0+1.5 && finger_0 > old_finger_0-1.5){
+  if(finger_0 < old_finger_0+2 && finger_0 > old_finger_0-2){
     finger_0 = old_finger_0;
   }
+ 
   else{
     old_finger_0 = finger_0;
   }
     
   float finger_1 = analogRead(INDEX_PIN);     //Read voltage of the voltage divider of the index
-  Serial.println("INDEX_PIN: " + String(finger_1) + "\n");
+  //Serial.println("INDEX_PIN: " + String(finger_1) + "\n");
   //finger_1 = filter_signal(finger_1, 5000);    //filtrage du signal RC a la freq specifiee 
-  //finger_0 = map(finger_0, 75, 50, 20, 0);
+  finger_1 = map(finger_1, 300, 650, 20, 0);
   
   if(finger_1 < old_finger_1+1.5 && finger_1 > old_finger_1-1.5){
     finger_1 = old_finger_1;
@@ -97,7 +98,7 @@ void read_sensor(void)
   }
   
   float finger_2 = analogRead(MIDDLE_PIN);     //Read voltage of the voltage divider of the major
-  Serial.println("MIDDLE_PIN: " + String(finger_2) + "\n");
+  //Serial.println("MIDDLE_PIN: " + String(finger_2) + "\n");
   //finger_2 = filter_signal(finger_2, 5000);    //filtrage du signal RC a la freq specifiee 
   //finger_0 = map(finger_0, 75, 50, 20, 0);
   
@@ -111,8 +112,9 @@ void read_sensor(void)
   message[0] = String("finger_0 " + String(finger_0)  + "\n");
   message[1] = String("finger_1 " + String(finger_1)  + "\n");
   message[2] = String("finger_2 " + String(finger_2)  + "\n");
+  Serial.print(message[0]+" "+message[1]);
   //message[3] = String("\n");
-  delay(1000);
+  //delay(1000);
 }
 
 void send_message(void)
@@ -125,5 +127,5 @@ void send_message(void)
     message[counter].toCharArray(message_buff,message[counter].length());
     radio.write(&message_buff, sizeof(message_buff));     // Send over the radio
     memset(message_buff, 0, sizeof(message_buff));        //Clear the buffer
-  }  
+  }
 }

@@ -49,6 +49,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	HomeOffset 	= 0;
 	dontMoveBackward  = 0 ;
 	dontMoveForward   = 0 ;
+	Sts_AtPosition = true;
 
 	torque_counter_filter = NULL;
 	moving_counter_filter = NULL;
@@ -256,6 +257,7 @@ void Axis::HomeRequest(bool *HomeSW)
 */
 void Axis::stopCmd()
 {
+    Sts_AtPosition = true;
 	moveAtSpeed("0");
 }
 /**
@@ -267,20 +269,22 @@ void Axis::stopCmd()
 */
 void Axis::verifGoalAchieve()
 {
-    if (Sts_Moving != 0)
+    if (!Sts_AtPosition)
     {
-        if(Sts_ActualVelocity> 0) // verification si velocity a des valeurs positives ou négatives
+        if(Sts_ActualVelocity > 0) // verification si velocity a des valeurs positives ou négatives
         {
             if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
             {
                 stopCmd();
+                Sts_AtPosition = 1;
             }
         }
-        else
+        else if (Sts_ActualVelocity < 0)
         {
             if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
             {
                 stopCmd();
+                Sts_AtPosition = 1;
             }
         }
     }
@@ -400,6 +404,7 @@ void Axis::moveAtSpeed(String cmd)
 	}
 }
 
+
 // **************** Set Parameters Methods ****************
 /**
 * By setting dontMoveForward to 1, this fonction forbid the motor to go anti-clockwise ************ à VÉRIFIER
@@ -430,10 +435,16 @@ void Axis::setPermissionBackward()
 * @param the desired position in degrees
 * @return Nothing.
 */
-void Axis::setGoalPosition(int goalP)
+void Axis::setGoalPosition(float goalP)
 {
     Sts_GoalPosition = goalP;
 }
+
+void Axis::setAtPosition(bool Reached)
+{
+    Sts_AtPosition = Reached;
+}
+
 /**
 * Set the new maximum software limit to the motor
 *
@@ -676,12 +687,13 @@ int Axis::getTorque()
 *
 *
 * @param Nothing
-* @return actual velocity [1 unit = 0.229 [rev/min]]
+* @return actual velocity [1 unit = 0.229 [rpm]]
 */
 
 int Axis::getVelocity()
 {
-	Sts_ActualVelocity = dxl.convertValue2Velocity(ID,readRegister("Present_Velocity"));
+	Sts_ActualVelocity = readRegister("Present_Velocity");
+
 
 	if(debugMode == 1)
 	{
