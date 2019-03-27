@@ -97,9 +97,9 @@ void loop()
 {
   short axis_index;
   
-  //Axis_table[1]->readStatus();
-  //Axis_table[2]->readStatus();
-  //Axis_table[3]->readStatus();
+  Axis_table[1]->readStatus();
+  Axis_table[2]->readStatus();
+  Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
   limitSwitch();           
@@ -259,20 +259,31 @@ void read_serial(void)
          }
         else if(cmd[0] == "Vel")
          {
-            axis->getVelocity();
+            Serial.println(axis->getVelocity());
          }
+         else if (cmd[0] == "stop")
+          {
+            short axis_index;
+             // Set the motor velocity to 0 and indicates that it has reach is position
+            for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+              {
+                Axis_table[axis_index]->stopCmd();
+              } 
+          }
         else if(cmd[0] == "moveto")
          {
-            int goalpos = cmd[2].toInt();
+            int goalpos = cmd[2].toFloat();
             Serial.println(goalpos);
-            axis->setGoalPosition(goalpos);   //idée comme ça, on utilise une 4e commende pour la vitesse voulue. On pourrait même setuper 3 vitesses prédéfini genre slow, medium, fast ****
+            axis->setGoalPosition(goalpos);   //idée comme ça, on utilise une 4e commande pour la vitesse voulue. On pourrait même setuper 3 vitesses prédéfini genre slow, medium, fast ****
             if(goalpos < axis->getPosition())
             {
               axis->moveAtSpeed("-50");
+              axis->setAtPosition(false);
             }
             if(goalpos > axis->getPosition())
             {
               axis ->moveAtSpeed("50");
+              axis->setAtPosition(false);
             }
          }
         else if (cmd[0] == "torque_control_enable")
