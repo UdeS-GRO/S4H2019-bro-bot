@@ -4,7 +4,7 @@
  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
 
-from threading import Thread,Condition,RLock,Event
+from threading import Thread, Condition, RLock, Event
 
 from tkinter import Tk, Button, Label, Entry, W, E, Checkbutton, BooleanVar, END, INSERT, Text,Scale, constants, \
     Radiobutton, StringVar
@@ -326,21 +326,37 @@ def play():
     global routine_event_cv
     global stop_flag
     global is_play_thread_alive_
-
-    x = routine.search("x","1.0", stopindex=END)
+    cmd_bloc = []
+    is_bloc_encounter = False    
+    
+#    x = routine.search("x","1.0", stopindex=END)
     first_loop = True
-    while (loop() or first_loop) and threads_on and not stop_flag:
+    checkParenthesis = checkBloc()
+    
+    while (loop() or first_loop) and threads_on and not stop_flag and checkParenthesis:
         first_loop = False
         for index, inst in enumerate(instructionListe):
-            if index < int(float(x))-1:
-                pass
+#            if index < int(float(x))-1:
+#                pass
+#            else:
+            
+            if inst == '(':
+                is_bloc_encounter = True
+                
+            elif inst == ')':
+                is_bloc_encounter = False
+                # call the send_bloc function
+                
+            elif is_bloc_encounter:
+                cmd_bloc.append(inst)
+                
             else:
-                execute = inst
-                send(execute)
-                # Wait for the "nolidge" flag or timeout before continuing to the next command
-                routine_event_cv.clear()
-                routine_event_cv.wait(15)         #Wait the nolidge flag or wait 20 seconds
-
+                    execute = inst
+                    send(execute)
+                    # Wait for the "nolidge" flag or timeout before continuing to the next command
+                    routine_event_cv.clear()
+                    routine_event_cv.wait(15)         #Wait the nolidge flag or wait 20 seconds
+    
             with stop_flag_lock:
                 if stop_flag:
                     break
@@ -349,6 +365,39 @@ def play():
         stop_flag = False
 
         is_play_thread_alive_ = False
+    
+    
+        
+def checkBloc():
+    compteurLeft  = 0
+    compteurRight = 0
+    
+    for inst in instructionListe:
+        if inst == '(':
+            compteurLeft += 1
+        elif inst == ')':
+            compteurRight += 1
+            
+    if compteurLeft == compteurRight:
+        check = True
+    else:
+        check = False
+        print('Missing parenthesis, you dumbass')
+    
+    return check
+        
+def sendBloc(cmd_list):
+    cnt_nolidge =0
+    
+    for inst in cmd_list:
+        if inst[0:5] == 'moveto':
+            cnt_nolidge += 1
+        
+        send(inst)    
+        
+    
+        
+    
 
 def stop(event):
     " Call the stop function when stop button is pressed"
@@ -491,11 +540,11 @@ butExecute.bind("<Button-1>", execute)
 butExecute.place(x = 485, y = 196)
 
 instructEntry = Entry(root)
-instructEntry.place(x = 585, y = 160)
+instructEntry.place(x = 585, y = 180)
 
-butStop = Button(root, height=5, width=15, text = "STOP", bg="red")
+butStop = Button(root, height=4, width=10, text = "STOP", bg="red")
 butStop.bind("<Button-1>", stop)
-butStop.place(x = 610, y = 196)
+butStop.place(x = 655, y = 215)
 
 routine.insert(INSERT, "x")
 
@@ -517,7 +566,7 @@ auto.grid(row=0,column=4, padx=4, pady=4, sticky=W)
 #-------------Loop Routine ----------
 loopRoutine = BooleanVar()
 loopRout = Checkbutton(root, text="Loop", variable =loopRoutine, command=loop)
-loopRout.grid(row =1, column = 4, pady= 4, sticky=W)
+loopRout.grid(row =1, column = 4, padx=4, pady= 4, sticky=W)
 
 #-------------Reset-------------------
 
@@ -591,11 +640,9 @@ def read():
         if cmd_read_decoded[:len(cmd_read_decoded)-2] == 'nolidge':
             try:
                 routine_event_cv.set()
-
+                
             except RuntimeError:
                 print("No waiting task")
-
-
 
 
 # If the code is not run in test mode and it's not imported
