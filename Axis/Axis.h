@@ -95,7 +95,8 @@ public:
 	// **** Set Parameters Methods ****
     void setPermissionForward();
 	void setPermissionBackward();
-	void setGoalPosition(int goalP);
+	void setAtPosition(bool isReached);
+	void setGoalPosition(float goalP);
 	void setMaxSoftlimit(String cmd);
 	void setMinSoftlimit(String cmd);
 
