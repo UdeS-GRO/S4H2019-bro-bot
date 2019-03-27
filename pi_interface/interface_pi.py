@@ -12,7 +12,7 @@ import time
 import serial
 
 # Set this variable to used the print instead of serial. Good to change the GUI and test
-test_mode = False
+test_mode = True
 if __name__ == '__main__':
     if test_mode:
         __name__ = "__test__"
@@ -345,7 +345,9 @@ def play():
                 if stop_flag:
                     break
 
+    with stop_flag_lock:
         stop_flag = False
+
         is_play_thread_alive_ = False
 
 def stop(event):
@@ -592,6 +594,8 @@ def read():
 
             except RuntimeError:
                 print("No waiting task")
+
+
 
 
 # If the code is not run in test mode and it's not imported

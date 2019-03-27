@@ -51,7 +51,6 @@ class TestInterface(unittest.TestCase):
         interface_pi.radioButFingers[2].select()
         self.update_events()
 
-
     #======= Motor buttons =======
 
     # ****** Motor 1 ******
