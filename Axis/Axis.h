@@ -56,12 +56,11 @@ public:
 	int 	Sts_ActualTorque;
 	float 	Sts_ActualVelocity;
 	bool 	Sts_Moving;
-	bool 	Sts_AtPosition;
+	bool 	JMWatchdog;
 	bool 	Sts_Homed;
 	bool 	Sts_Homing;
     bool 	Sts_Enabled;
-    int     Sts_GoalPosition;
-	//float 	HomeOffset = 0; Mis en commentaire puisque déjà dans private
+    float   Sts_GoalPosition;
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
 
@@ -82,11 +81,9 @@ public:
 
 	// ***************************
 	// **** Moving Methods ****
-
-	//void Zero();
 	void HomeRequest(bool *HomeSW);
 	void stopCmd();
-	// moveTo(String cmd);
+	void Moveto(int goalpos);
 	void moveAtSpeed(String cmd);
 	void verifGoalAchieve(void);
 
@@ -95,8 +92,8 @@ public:
 	// **** Set Parameters Methods ****
     void setPermissionForward();
 	void setPermissionBackward();
-	void setAtPosition(bool isReached);
-	void setGoalPosition(float goalP);
+	//void setAtPosition(bool isReached);
+	//void setGoalPosition(float goalP);
 	void setMaxSoftlimit(String cmd);
 	void setMinSoftlimit(String cmd);
 

@@ -49,7 +49,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	HomeOffset 	= 0;
 	dontMoveBackward  = 0 ;
 	dontMoveForward   = 0 ;
-	Sts_AtPosition = true;
+	JMWatchdog = true;
 
 	torque_counter_filter = NULL;
 	moving_counter_filter = NULL;
@@ -64,7 +64,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 		model = 350;
 	}
 
-	// **** Initialisation de la communication avec les moteurs ****
+	// **** Initialize communication with motors ****
 	result = dxl.init(DEVICE_NAME, 57600);
 	if (result == false)
 	{
@@ -77,7 +77,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	Serial.println(baud);
 	}
 
-	// **** Scan du reseau pour lire les moteurs ****
+	// **** Scan network to find motors ****
 	uint8_t range = 10;
 	result = dxl.scan(get_id, &scan_cnt, range);
 	if (result == false)
@@ -115,6 +115,7 @@ Axis::~Axis()
 // *****************************************************************************************************
 
 // **************** Enabling Methods ****************
+
 /**
 * Enable the motor by setting his torque on.
 *
@@ -142,6 +143,8 @@ void Axis::Enable()
 		Sts_Enabled = 1;
 	}
 }
+
+
 /**
 * Disable the motor by setting his torque off.
 *
@@ -170,42 +173,9 @@ void Axis::Disable()
 	}
 }
 
+
 // **************** Moving Methods ****************
 
-/*
-void Axis::Zero()
-{
-	result = dxl.jointMode(ID, 0, 0, &log);
-
-	if(debugMode == 1)
-	{
-		if (result == false)
-		{
-			Serial.println(log);
-			return;
-		}
-		else
-		{
-			Serial.println(log);
-		}
-	}
-
-	result = dxl.goalPosition(ID, (int32_t)0, &log);
-
-	if(debugMode == 1)
-	{
-		if (result == false)
-		{
-			Serial.println(log);
-			return;
-		}
-		else
-		{
-			Serial.println(log);
-		}
-	}
-}
-*/
 /**
 * Initialize the zero position of the motor by setting an offset to his position
 *
@@ -218,8 +188,6 @@ void Axis::HomeRequest(bool *HomeSW)
 {
 	Sts_Homed = 0;
 	HomeOffset = 0;
-
-	//writeRegister("Homing_Offset", convertAngle2Value(HomeOffset));
 
 	if(Sts_Homing == 0)
 	{
@@ -243,11 +211,10 @@ void Axis::HomeRequest(bool *HomeSW)
 			Serial.println(Sts_ActualPosition);
 		}
 		dontMoveBackward = 1;
-
-		//writeRegister("Homing_Offset", convertAngle2Value(HomeOffset));
-
 	}
 }
+
+
 /**
 * Stop the motor from spinning
 *
@@ -257,11 +224,13 @@ void Axis::HomeRequest(bool *HomeSW)
 */
 void Axis::stopCmd()
 {
-    Sts_AtPosition = true;
+    JMWatchdog = true;
 	moveAtSpeed("0");
 }
+
+
 /**
-* check if the motor achieve his goal position when moveto cmd is sent on the main_open_cr.ino
+* Check if the motor achieved his goal position when moveto cmd is sent on the main_open_cr.ino
 *
 *
 * @param Nothing
@@ -269,14 +238,14 @@ void Axis::stopCmd()
 */
 void Axis::verifGoalAchieve()
 {
-    if (!Sts_AtPosition)
+    if (!JMWatchdog)
     {
-        if(Sts_ActualVelocity > 0) // verification si velocity a des valeurs positives ou négatives
+        if(Sts_ActualVelocity > 0) // Verify direction of the motion
         {
             if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
             {
                 stopCmd();
-                Sts_AtPosition = 1;
+                JMWatchdog = 1;
             }
         }
         else if (Sts_ActualVelocity < 0)
@@ -284,59 +253,32 @@ void Axis::verifGoalAchieve()
             if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
             {
                 stopCmd();
-                Sts_AtPosition = 1;
+                JMWatchdog = 1;
             }
         }
     }
 }
 
-/*
-void Axis::moveTo(String cmd)
+void Axis::Moveto(float goalpos)
 {
-	uint16_t position = cmd.toInt();
+	Sts_GoalPosition = goalpos;
+	Serial.println(Sts_GoalPosition);
 
-	if(position > MaxSoftlimit)
+	if(Sts_GoalPosition < getPosition())
 	{
-		position = MaxSoftlimit;
+		moveAtSpeed("-50");
+		JMWatchdog = false;
 	}
-	else if (position < MinSoftlimit)
+	if(Sts_GoalPosition > getPosition())
 	{
-		position = MinSoftlimit;
-	}
-
-	result = dxl.jointMode(ID, 0, 0, &log);
-
-	if(debugMode == 1)
-	{
-		if (result == false)
-		{
-			Serial.println(log);
-			return;
-		}
-		else
-		{
-			Serial.println(log);
-		}
-	}
-
-	result = dxl.goalPosition(ID, (int32_t)position, &log);
-
-	if(debugMode == 1)
-	{
-		if (result == false)
-		{
-			Serial.println(log);
-			return;
-		}
-		else
-		{
-			Serial.println(log);
-		}
+		moveAtSpeed("50");
+		JMWatchdog = false;
 	}
 }
-*/
+
+
 /**
-* make the motor spin to a given speed. Negative = clockwise ***********VÉRIFIER CE STATEMENT
+* make the motor spin to a given speed. Negative = clockwise ***********Vï¿½RIFIER CE STATEMENT
 * It also put the variable dontMoveForward or dontMoveBackward to zero depending on the sense the motor turns
 * This is to follow the event of a switch being activate and then forbiding to going in the sense the motor
 * was spinning
@@ -351,25 +293,25 @@ void Axis::moveAtSpeed(String cmd)
 
     if (vitesse < 0)
 	{
-			dontMoveForward = 0;
+		dontMoveForward = 0;
 
-			if (dontMoveBackward)
-					{
-							Serial.println ("You can't move backward");
-							return;
-					}
+		if (dontMoveBackward)
+		{
+			Serial.println ("You can't move backward");
+			return;
+		}
 
 	}
 
 	if (vitesse > 0)
 	{
-			dontMoveBackward = 0;
+		dontMoveBackward = 0;
 
-			if (dontMoveForward)
-					{
-							Serial.println("You can't move Forward");
-							return;
-					}
+		if (dontMoveForward)
+		{
+			Serial.println("You can't move Forward");
+			return;
+		}
 
 	}
 
@@ -379,12 +321,12 @@ void Axis::moveAtSpeed(String cmd)
 	{
 		if (result == false)
 		{
-				Serial.println(log);
-				return;
+			Serial.println(log);
+			return;
 		}
 		else
 		{
-				Serial.println(log);
+			Serial.println(log);
 		}
 	}
 
@@ -394,12 +336,12 @@ void Axis::moveAtSpeed(String cmd)
 	{
 		if (result == false)
 		{
-				Serial.println(log);
-				return;
+			Serial.println(log);
+			return;
 		}
 		else
 		{
-				Serial.println(log);
+			Serial.println(log);
 		}
 	}
 }
@@ -407,7 +349,7 @@ void Axis::moveAtSpeed(String cmd)
 
 // **************** Set Parameters Methods ****************
 /**
-* By setting dontMoveForward to 1, this fonction forbid the motor to go anti-clockwise ************ à VÉRIFIER
+* By setting dontMoveForward to 1, this fonction forbid the motor to go anti-clockwise ************ ï¿½ Vï¿½RIFIER
 *
 *
 * @param Nothing
@@ -417,8 +359,10 @@ void Axis::setPermissionForward()
 {
     dontMoveForward = 1;
 }
+
+
 /**
-* By setting dontMoveBackward to 1, this fonction forbid the motor to go clockwise ************ à VÉRIFIER
+* By setting dontMoveBackward to 1, this fonction forbid the motor to go clockwise ************ ï¿½ Vï¿½RIFIER
 *
 *
 * @param Nothing
@@ -428,22 +372,7 @@ void Axis::setPermissionBackward()
 {
     dontMoveBackward = 1;
 }
-/**
-* Set the goal position in degrees according to the home offset of the fct HomeRequest
-*
-*
-* @param the desired position in degrees
-* @return Nothing.
-*/
-void Axis::setGoalPosition(float goalP)
-{
-    Sts_GoalPosition = goalP;
-}
 
-void Axis::setAtPosition(bool Reached)
-{
-    Sts_AtPosition = Reached;
-}
 
 /**
 * Set the new maximum software limit to the motor
@@ -474,6 +403,8 @@ void Axis::setMaxSoftlimit(String cmd)
 		}
 	}
 }
+
+
 /**
 * Set the new minimum software limit to the motor
 *
@@ -481,7 +412,6 @@ void Axis::setMaxSoftlimit(String cmd)
 * @param the desired new min soft limit in degrees
 * @return Nothing.
 */
-
 void Axis::setMinSoftlimit(String cmd)
 {
 	int32_t value = cmd.toInt();
@@ -506,6 +436,7 @@ void Axis::setMinSoftlimit(String cmd)
 	}
 }
 
+
 /**
 * Set a new counter from counter_filter.h.
 * Used to trigger the torque off after a certain amount of time of applying an external torque.
@@ -524,6 +455,7 @@ void Axis::setTorqueFilter(float new_reference, float new_maxDifference, int new
 	torque_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
+
 /**
 * Set a new counter from counter_filter.h.
 * Used to trigger the torque on after a certain amount of time of NOT applying an external torque.
@@ -541,6 +473,7 @@ void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new
 	}
 	moving_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
+
 
 /**
 * Set the LED to blink or not. We use it to show when the motor is in teaching mode after the trigger of the torque_counter_filter
@@ -578,6 +511,7 @@ void Axis::blink(blink_state new_blink_state, unsigned long time_open_millis)
 	}
 }
 
+
 // **************** Read Paramters Methods ****************
 /**
 * Read the actual status of the position, Current, torque, velocity and the moving status of the motor
@@ -595,6 +529,8 @@ void Axis::readStatus()
 	dummy = getVelocity();
 	dummy = getMovingStatus();
 }
+
+
 /**
 * Get the actuel position of the motor in degrees according to the home offset of the fct HomeRequest
 *
@@ -602,7 +538,6 @@ void Axis::readStatus()
 * @param Nothing
 * @return the actual Position [degrees]
 */
-
 int Axis::getPosition()
 {
 	Sts_ActualPosition = (convertValue2Angle(readRegister("Present_Position")));
@@ -628,6 +563,8 @@ int Axis::getPosition()
 
 	return Sts_ActualPosition;
 }
+
+
 /**
 * Get the actual current of the motor. Used with the torque control of the 350 model
 *
@@ -648,6 +585,8 @@ int Axis::getCurrent()
 
 	return Sts_ActualCurrent;
 }
+
+
 /**
 * Get the actual torque of the motor. Used with the torque control of the 250 model
 *
@@ -682,6 +621,7 @@ int Axis::getTorque()
 	return Sts_ActualTorque;
 }
 
+
 /**
 * Get the actual velocity of the motor.
 *
@@ -689,7 +629,6 @@ int Axis::getTorque()
 * @param Nothing
 * @return actual velocity [1 unit = 0.229 [rpm]]
 */
-
 int Axis::getVelocity()
 {
 	Sts_ActualVelocity = readRegister("Present_Velocity");
@@ -704,6 +643,8 @@ int Axis::getVelocity()
 
 	return Sts_ActualVelocity;
 }
+
+
 /**
 * Get the actual moving status. If it is moving or not
 *
@@ -711,7 +652,6 @@ int Axis::getVelocity()
 * @param Nothing
 * @return actual moving status. Even if its a int, it's either 1 or 0
 */
-
 int Axis::getMovingStatus()
 {
 	Sts_Moving = readRegister("Moving");
@@ -730,6 +670,7 @@ int Axis::getMovingStatus()
 
 	return Sts_Moving;
 }
+
 
 /**
 * Get the variable dontMoveForward. To know if the motor can move anti-clockwise ***********
@@ -755,6 +696,8 @@ bool Axis::getPermissionForward()
         }
     return dontMoveForward;
 }
+
+
 /**
 * Get the variable dontMoveBackward. To know if the motor can move clockwise ***********
 *
@@ -780,7 +723,10 @@ bool Axis::getPermissionBackward()
     return dontMoveBackward;
 }
 
+
 // **************** Read/Write Register Methods ****************
+
+
 /**
 * Function used in many other fct. Read the registers of the motor
 *
@@ -812,6 +758,8 @@ int Axis::readRegister(String regName)
 
 	return data;
 }
+
+
 /**
 * Function used in many other fct. write in registers of the motor
 *
@@ -853,6 +801,8 @@ void Axis::writeRegister(String regName, int32_t value)
 // *****************************************************************************************************
 
 // **************** Convertion Methods ****************
+
+
 /**
 * Convert the value of the register in degree
 *
@@ -864,6 +814,8 @@ float Axis::convertValue2Angle(int value)
 {
     return (value*360/4095);
 }
+
+
 /**
 * Convert the value in degrees into the value suitable for the register. Used when writing in register
 *

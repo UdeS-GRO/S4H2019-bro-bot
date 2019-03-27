@@ -272,7 +272,7 @@ void read_serial(void)
           }
         else if(cmd[0] == "moveto")
          {
-            int goalpos = cmd[2].toFloat();
+            /*int goalpos = cmd[2].toFloat();
             Serial.println(goalpos);
             axis->setGoalPosition(goalpos);   //idée comme ça, on utilise une 4e commande pour la vitesse voulue. On pourrait même setuper 3 vitesses prédéfini genre slow, medium, fast ****
             if(goalpos < axis->getPosition())
@@ -284,7 +284,9 @@ void read_serial(void)
             {
               axis ->moveAtSpeed("50");
               axis->setAtPosition(false);
-            }
+            }*/
+
+            axis->Moveto(cmd[2].toFloat());
          }
         else if (cmd[0] == "torque_control_enable")
         {
@@ -418,19 +420,17 @@ void limitSwitch(void)
   }*/
 
 // Juste pour faire des tests
-  if (MinLS[1] && Axis_table[3]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
+  if (MinLS[1] && Axis_table[1]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
   { 
     Serial.println("Wouhou! it is working !!");
-    stopBySwitch(Axis_table[3]);
-    Axis_table[3]->setPermissionForward();
+    stopBySwitch(Axis_table[1]);
+    Axis_table[1]->setPermissionForward();
   }
 
-  /*for(int i=1;i<=NUMBER_OF_AXIS;i++)
+  
+  if( Axis_table[1]->Sts_Homing == 1)
   {
-    if( Axis_table[i]->Sts_Homing == 1)
-    {
-     Axis_table[i]->HomeRequest(&MinLS[i]);
-    }
-  }*/
+   Axis_table[1]->HomeRequest(&MinLS[1]);
+  }
 
 }
