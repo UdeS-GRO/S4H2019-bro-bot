@@ -25,6 +25,8 @@ float filter_signal(float signal_to_filter);
 float old_finger_0 = 0;
 float old_finger_1 = 0;
 float old_finger_2 = 0;
+int fingerPins[3]={THUMB_PIN,INDEX_PIN,MIDDLE_PIN};
+int CalibrationVals[2][3];   
 
 void setup() {
   Serial.begin(9600);
@@ -32,7 +34,7 @@ void setup() {
   pinMode(THUMB_PIN, INPUT);
   pinMode(INDEX_PIN, INPUT);
   pinMode(MIDDLE_PIN, INPUT);
-
+  CalibrateFlexSensors();
   radio.begin();
   radio.openWritingPipe(address);
   radio.setPALevel(RF24_PA_MIN);  // Lowest power
@@ -47,9 +49,7 @@ void loop()
 {
   /* Read the sensors and build strings to send */
   read_sensor();
-  //Serial.println(message[0]);
-  //Serial.println(message[1]);
-  //Serial.println(message[2]);
+   
   /* Send the builded strings */
   send_message();
 }
@@ -67,6 +67,50 @@ void loop()
   
 //}
 
+
+void CalibrateFlexSensors(){
+  int calibrationCount=0;
+  while(calibrationCount<=1){
+    /* If calibrationCount==0, then find minimum flex value (hand relaxed position)
+     * Elif calibrationCount==1, then find maximum flex value (hand in fist position)
+     */
+     if(calibrationCount==0){
+      Serial.println("Please lay your hand flat");
+      delay(3000);
+      Serial.println("Collecting minimum flex readings");
+     }
+     else if(calibrationCount==1){
+      Serial.println("Please close you hand into a fist");
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(3000);
+      Serial.println("Collecting maximum flex readings");
+     }
+     for(int i=0; i<3; i++){
+      int readingCount=0;
+      int readingSum=0;
+      while(readingCount<10){                        //Take 10 unique readings
+        readingSum+=analogRead(fingerPins[i]);
+        readingCount+=1;
+        delay(200);
+      }      
+      CalibrationVals[calibrationCount][i]=readingSum/10;    //Record average of 10 readings
+     }
+     calibrationCount+=1;
+  }
+  Serial.println("Calibration Complete");
+  digitalWrite(LED_BUILTIN, LOW);
+  Serial.println("In the order from thumb to middle, your offsets are:");
+  for(int i=0; i<2; i++){
+    if(i==0){Serial.print("Minimum Offsets:\t");}
+    else{Serial.print("Maximum Offsets:\t");}
+    for(int j=0; j<3; j++){
+      Serial.print(CalibrationVals[i][j]);
+      Serial.print(", ");
+    }  
+    Serial.println();
+  }
+}
+
 void read_sensor(void)
 {
     
@@ -75,7 +119,7 @@ void read_sensor(void)
   float finger_0 = analogRead(THUMB_PIN);
   //Serial.println("THUMB_PIN: " + String(finger_0) + "\n");
   //finger_0 = filter_signal(finger_0, 5000);    //filtrage du signal RC a la freq specifiee 
-  finger_0 = map(finger_0, 320, 750, 0, 20);
+  finger_0 = map(finger_0, CalibrationVals[0][0], CalibrationVals[1][0], 0, 20);
   
   if(finger_0 < old_finger_0+2 && finger_0 > old_finger_0-2){
     finger_0 = old_finger_0;
@@ -88,7 +132,7 @@ void read_sensor(void)
   float finger_1 = analogRead(INDEX_PIN);     //Read voltage of the voltage divider of the index
   //Serial.println("INDEX_PIN: " + String(finger_1) + "\n");
   //finger_1 = filter_signal(finger_1, 5000);    //filtrage du signal RC a la freq specifiee 
-  finger_1 = map(finger_1, 300, 650, 20, 0);
+  finger_1 = map(finger_1, CalibrationVals[0][1], CalibrationVals[1][1], 0, 20);
   
   if(finger_1 < old_finger_1+1.5 && finger_1 > old_finger_1-1.5){
     finger_1 = old_finger_1;
@@ -100,7 +144,7 @@ void read_sensor(void)
   float finger_2 = analogRead(MIDDLE_PIN);     //Read voltage of the voltage divider of the major
   //Serial.println("MIDDLE_PIN: " + String(finger_2) + "\n");
   //finger_2 = filter_signal(finger_2, 5000);    //filtrage du signal RC a la freq specifiee 
-  //finger_0 = map(finger_0, 75, 50, 20, 0);
+  finger_2 = map(finger_2, CalibrationVals[0][2], CalibrationVals[1][2], 0, 20);
   
   if(finger_2 < old_finger_2+1.5 && finger_2 > old_finger_2-1.5){
     finger_2 = old_finger_2;
@@ -112,7 +156,7 @@ void read_sensor(void)
   message[0] = String("finger_0 " + String(finger_0)  + "\n");
   message[1] = String("finger_1 " + String(finger_1)  + "\n");
   message[2] = String("finger_2 " + String(finger_2)  + "\n");
-  Serial.print(message[0]+" "+message[1]);
+  Serial.print(message[0]+" "+message[1]+" " + message[2]);
   //message[3] = String("\n");
   //delay(1000);
 }
