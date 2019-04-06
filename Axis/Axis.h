@@ -26,7 +26,7 @@ public:
 	// *********************************************
 	// **** Class constructor and destructor ****
 
-	Axis(uint8_t ID, uint32_t baud, int new_model = 350, int MinSoft = -20, int MaxSoft = 359);
+	Axis(uint8_t ID, uint32_t baud, int new_model = 350, int MinSoft = 5, int MaxSoft = 225);
 	~Axis();
 
 
@@ -63,6 +63,7 @@ public:
     float   Sts_GoalPosition;
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
+	int rotation_direction = 0;
 
 
 	// ****************************
@@ -83,7 +84,7 @@ public:
 	// **** Moving Methods ****
 	void HomeRequest(bool *HomeSW);
 	void stopCmd();
-	void Moveto(int goalpos);
+	void Moveto(float goalpos);
 	void moveAtSpeed(String cmd);
 	void verifGoalAchieve(void);
 

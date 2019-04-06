@@ -240,20 +240,35 @@ void Axis::verifGoalAchieve()
 {
     if (!JMWatchdog)
     {
-        if(Sts_ActualVelocity > 0) // Verify direction of the motion
+        if(rotation_direction > 0) // Verify direction of the motion
         {
             if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
             {
                 stopCmd();
                 JMWatchdog = 1;
+			Serial.println("Max soft limit :");
+			Serial.println(MaxSoftlimit);
+			Serial.println("VELOCITE");
+			Serial.println(Sts_ActualVelocity );
+
+
             }
         }
-        else if (Sts_ActualVelocity < 0)
+        else if (rotation_direction < 0)
         {
             if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
             {
                 stopCmd();
+			Serial.println("VELOCITE");
+			Serial.println(Sts_ActualVelocity );
+
                 JMWatchdog = 1;
+			if(Sts_ActualPosition <= (Sts_GoalPosition+2)){ 
+				Serial.println("arrive a goal pos");
+			}
+			if(Sts_ActualPosition <= MinSoftlimit) {
+				Serial.println("limite depassé");
+			}
             }
         }
     }
@@ -264,15 +279,20 @@ void Axis::Moveto(float goalpos)
 	Sts_GoalPosition = goalpos;
 	Serial.println(Sts_GoalPosition);
 
-	if(Sts_GoalPosition < getPosition())
+	if(Sts_GoalPosition < Sts_ActualPosition)
 	{
+		rotation_direction = -1;
 		moveAtSpeed("-50");
 		JMWatchdog = false;
+		Serial.println("c'est moi le probleme negatif");
 	}
-	if(Sts_GoalPosition > getPosition())
+	if(Sts_GoalPosition > Sts_ActualPosition)
 	{
+		rotation_direction = 1;
 		moveAtSpeed("50");
 		JMWatchdog = false;
+		Serial.println("c'est moi le probleme positif");
+
 	}
 }
 
@@ -560,7 +580,6 @@ int Axis::getPosition()
 		Serial.println("Actual Position is : ");
 		Serial.println(Sts_ActualPosition);
 	}
-
 	return Sts_ActualPosition;
 }
 
