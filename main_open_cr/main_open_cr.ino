@@ -71,7 +71,7 @@ void setup()
     /* Axis creation*/
     Axis_table[0] = NULL; //There is no axis 0
     Axis_table[1] = new Axis(1,57600,250,0,359); 
-    Axis_table[2] = new Axis(2,57600,350,25,250);
+    Axis_table[2] = new Axis(2,57600,350,5,225);
     Axis_table[3] = new Axis(3,57600,250);
     
     /*Init for the torque control*/
@@ -97,9 +97,9 @@ void loop()
 {
   short axis_index;
   
-  Axis_table[1]->readStatus();
+  //Axis_table[1]->readStatus();
   Axis_table[2]->readStatus();
-  Axis_table[3]->readStatus();
+  //Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
   limitSwitch();           
@@ -422,7 +422,7 @@ void limitSwitch(void)
 // Juste pour faire des tests
   if (MinLS[1] && Axis_table[1]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
   { 
-    Serial.println("Wouhou! it is working !!");
+    //Serial.println("Wouhou! it is working !!");
     stopBySwitch(Axis_table[1]);
     Axis_table[1]->setPermissionForward();
   }
