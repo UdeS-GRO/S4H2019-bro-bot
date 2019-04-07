@@ -63,6 +63,7 @@ public:
     float   Sts_GoalPosition;
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
+	bool    switchMode;
 	int rotation_direction = 0;
 
 
@@ -93,6 +94,7 @@ public:
 	// **** Set Parameters Methods ****
     void setPermissionForward();
 	void setPermissionBackward();
+	void setSwitchMode(bool Mode);
 	//void setAtPosition(bool isReached);
 	//void setGoalPosition(float goalP);
 	void setMaxSoftlimit(String cmd);
@@ -113,6 +115,7 @@ public:
 	int getMovingStatus();
 	bool getPermissionForward();
 	bool getPermissionBackward();
+	bool getSwitchMode();
 
 
 	void readStatus();

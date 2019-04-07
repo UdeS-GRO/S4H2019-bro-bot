@@ -49,6 +49,7 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	HomeOffset 	= 0;
 	dontMoveBackward  = 0 ;
 	dontMoveForward   = 0 ;
+	switchMode  = 0;
 	JMWatchdog = true;
 
 	torque_counter_filter = NULL;
@@ -263,7 +264,7 @@ void Axis::verifGoalAchieve()
 			Serial.println(Sts_ActualVelocity );
 
                 JMWatchdog = 1;
-			if(Sts_ActualPosition <= (Sts_GoalPosition+2)){ 
+			if(Sts_ActualPosition <= (Sts_GoalPosition+2)){
 				Serial.println("arrive a goal pos");
 			}
 			if(Sts_ActualPosition <= MinSoftlimit) {
@@ -494,6 +495,18 @@ void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new
 	moving_counter_filter = new counter_filter(new_reference, new_maxDifference, new_counterBeforeTrigger);
 }
 
+/**
+* Set the switchMode on/off. We use it in the limitswitch function of mainOpenCR.ino to know if the limit switch is on
+* and then not stoping the motor once it is already stop
+*
+* @param a bool that shows if it's on or not
+* @return Nothing.
+*/
+
+void Axis::setSwitchMode(bool Mode)
+{
+    switchMode = Mode;
+}
 
 /**
 * Set the LED to blink or not. We use it to show when the motor is in teaching mode after the trigger of the torque_counter_filter
@@ -740,6 +753,31 @@ bool Axis::getPermissionBackward()
             }
         }
     return dontMoveBackward;
+}
+
+/**
+* Get the variable switchMode. To know if limitswitch fct in openCR can stop the motors ***********
+*
+*
+* @param Nothing
+* @return if it can or not move stop the motor in limitSwitch fonction of OpenCR (1 = CAN'T)
+*/
+
+bool Axis::getSwitchMode()
+{
+    if (debugMode == 1)
+        {
+            if(switchMode)
+            {
+                Serial.println("switchMode is on");
+            }
+
+            else
+            {
+                Serial.println("switchMode is off");
+            }
+        }
+    return switchMode;
 }
 
 
