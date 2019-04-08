@@ -44,7 +44,7 @@ void attach_motor(void) {
 void read_radio(void) {
   char text[80] = "";
   radio.read(&text, sizeof(text));
-  Serial.println(text);
+  //Serial.println(text);
   int i = 0;
   finger_id = 0;
   finger_value_str = "";
