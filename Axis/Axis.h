@@ -1,8 +1,15 @@
 /*
-*	This Source Code Form is subject to the terms of the Mozilla Public
-*	License, v. 2.0.If a copy of the MPL was not distributed with this
-*	file, You can obtain one at http ://mozilla.org/MPL/2.0/.
-*/
+ *	This Source Code Form is subject to the terms of the Mozilla Public
+ *	License, v. 2.0.If a copy of the MPL was not distributed with this
+ *	file, You can obtain one at http ://mozilla.org/MPL/2.0/.
+ */
+
+/********
+ * Fichier: Axis.h
+ * Auteurs: M.-A Martel
+ * Date: 06 Fevrier 2019 (creation)
+ * Description:
+********/
 
 #ifndef AXIS_H
 #define AXIS_H
@@ -64,7 +71,7 @@ public:
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
 	bool    switchMode;
-	int     rotation_direction = 0;
+	int rotation_direction = 0;
 
 
 	// ****************************
