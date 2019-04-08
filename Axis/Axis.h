@@ -64,7 +64,7 @@ public:
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
 	bool    switchMode;
-	int rotation_direction = 0;
+	int     rotation_direction = 0;
 
 
 	// ****************************

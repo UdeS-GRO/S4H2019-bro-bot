@@ -5,7 +5,7 @@
 */
 
 #include <DynamixelWorkbench.h>
-#include "p_monitor.h"
+//#include "p_monitor.h"  // À EFFACER LORSQUE LES TESTS SERONT TERMINÉS
 #include "Axis.h"
 #include "HandControl.h"
 #include "Glove.h"
@@ -49,15 +49,16 @@ bool MinLS[NUMBER_OF_AXIS];
 bool MaxLS[NUMBER_OF_AXIS];
 
 
-//Function declarations
+// Function declarations
 void read_serial(void);
 void torque_control(Axis * axis);
 void fix_com(void);
 void ack_msg(void);
 void change_finger_control_mode(String new_mode);
 void finger_control(int finger_number);
-void limitSwitch(void);
 void stopBySwitch(Axis * axis);
+void limitSwitch(void);
+void split(String data, char separator, String* temp);
 
 // Initialisation
 void setup()
@@ -66,7 +67,7 @@ void setup()
     Serial.begin(57600);
     while(!Serial);     // Wait until the serial is ready
     
-    fix_com();    // fait bugger le opencr
+    //fix_com();    // fait bugger le opencr
     
     /* Axis creation*/
     Axis_table[0] = NULL; //There is no axis 0
@@ -173,9 +174,10 @@ void torque_control(Axis * axis)
       if(triggered)
       {
         axis->moving_counter_filter->reset_counter();
-        cmd_tx[0] = String("torque_off");                                                   //TODO : Implementer un système de queue de message 
+        axis->Disable();
+        /*cmd_tx[0] = String("torque_off");                                                   //TODO : Implementer un système de queue de message 
         cmd_tx[1] = String(axis->ID);
-        dynamixel_command(cmd_tx); 
+        dynamixel_command(cmd_tx); */
         axis->isFreeToMove = true;
         axis->blink(GREEN_BLINK,500);   //Blink 500 ms
       }
@@ -190,9 +192,10 @@ void torque_control(Axis * axis)
       
       if(triggered)
       {
-        cmd_tx[0] = String("torque_on");
+        /*cmd_tx[0] = String("torque_on");
         cmd_tx[1] = String(axis->ID); 
-        dynamixel_command(cmd_tx);
+        dynamixel_command(cmd_tx);*/
+        axis->Enable();
         axis->torque_counter_filter->reset_counter();
         
         axis->isFreeToMove = false;
@@ -209,9 +212,10 @@ void torque_control(Axis * axis)
     axis->moving_counter_filter->reset_counter();
     axis->blink(STOP_BLINK,500);   //Blink 500 ms
     
-    cmd_tx[0] = String("torque_on");
+    /*cmd_tx[0] = String("torque_on");
     cmd_tx[1] = String(axis->ID); 
-    dynamixel_command(cmd_tx);
+    dynamixel_command(cmd_tx);*/
+    axis->Enable();
   }
 }
 
@@ -363,7 +367,7 @@ void change_finger_control_mode(String new_mode)
   }
 }
 
-void fix_com(void)
+/*void fix_com(void)
 {
     cmd_tx[0] = String("begin");    //Bug qui doit être régler
     cmd_tx[1] = String("57600"); 
@@ -371,7 +375,7 @@ void fix_com(void)
     cmd_tx[0] = String("scan");
     cmd_tx[1] = String("3"); 
     dynamixel_command(cmd_tx);
-}
+}*/
 
 void ack_msg(void)
 {
@@ -407,31 +411,51 @@ void limitSwitch(void)
 {
   // Limits Switch digital Read
   MinLS[1] = digitalRead(inMinLS01);
- /* MinLS[2] = digitalRead(inMinLS02);
-  MinLS[3] = digitalRead(inMinLS03);
+  MinLS[2] = digitalRead(inMinLS02);
+  //MinLS[3] = digitalRead(inMinLS03);
   MaxLS[1] = digitalRead(inMaxLS01);
   MaxLS[2] = digitalRead(inMaxLS02);
-  MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  //MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
   // stoping by limit switch
-/*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)      // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  
+int axis_index;
+
+for (axis_index =1; axis_index < NUMBER_OF_AXIS-1 ; axis_index++)      // ENLEVER LE -1 LORSQU'ELLES SERONT TOUS CONNECTÉS
   {
-    if (MinLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0 || MaxLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0)
+    if(Axis_table[axis_index]->getSwitchMode())
     {
-      Serial.print("that is weird");
-      stopBySwitch(Axis_table[axis_index]);
-      if (MinLS[axis_index])
+        if(!MinLS[axis_index] && !MaxLS[axis_index])
         {
-          Axis_table[axis_index]->setAcceptationBackward;
-        }
-      if (MaxLS[axis_index])
-        {
-          Axis_table[axis_index]->setAcceptationForward;
+          Axis_table[axis_index]->setSwitchMode(false);
         }
     }
-  }*/
+    else if(!Axis_table[axis_index]->getSwitchMode()) // à changer avec le SwitchMode dans axis.cpp
+    {
+      if (MinLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0 || MaxLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0)
+      {
+        stopBySwitch(Axis_table[axis_index]);
+        
+        if (MinLS[axis_index])
+          {
+            Serial.print("switch MIN ");
+            Serial.println(axis_index);        
+            Axis_table[axis_index]->setPermissionBackward();
+          }
+        else if (MaxLS[axis_index])
+          {
+           Serial.print("switch MAX ");
+           Serial.println(axis_index);
+           Axis_table[axis_index]->setPermissionForward();
+          }
+        else 
+          {
+            Serial.println("WHAAT IS HAPPENING HERE");
+          }
+      }
+    }
 
 // Juste pour faire des tests
-  if (MinLS[1] && Axis_table[1]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
+  /*if (MinLS[1] && Axis_table[1]->Sts_Homing == 0)  // *************** Le test est pour le moteur 3 *************************
   { 
     //Serial.println("Wouhou! it is working !!");
     stopBySwitch(Axis_table[1]);
@@ -442,6 +466,33 @@ void limitSwitch(void)
   if( Axis_table[1]->Sts_Homing == 1)
   {
    Axis_table[1]->HomeRequest(&MinLS[1]);
-  }
+  }*/
 
+  }
+}
+
+void split(String data, char separator, String* temp)
+{
+  int cnt = 0;
+  int get_index = 0;
+
+  String copy = data;
+  
+  while(true)
+  {
+    get_index = copy.indexOf(separator);
+
+    if(-1 != get_index)
+    {
+      temp[cnt] = copy.substring(0, get_index);
+
+      copy = copy.substring(get_index + 1);
+    }
+    else
+    {
+      temp[cnt] = copy.substring(0, copy.length());
+      break;
+    }
+    ++cnt;
+  }
 }
