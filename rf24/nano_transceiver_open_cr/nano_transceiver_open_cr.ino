@@ -16,7 +16,9 @@ const byte address[6] = "gant0";
 int flexsensorRange[2][3]= {{20,20,369},
                             {0,0,356}}; 
 
-Servo thumb, index, middle;
+Servo thumb;
+Servo INDEX;
+Servo middle;
 int angles[3];                              //array for storing servo angles
 int val;
 String finger_value_str = "";
@@ -26,13 +28,13 @@ float finger_id;
 int flexPins[] = {A0,A1,A2};
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(57600);
   radio.begin();
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
   thumb.attach(2);
-  index.attach(3);
+  INDEX.attach(3);
   middle.attach(4);
 }
 void loop() {
@@ -105,7 +107,7 @@ void loop() {
         thumb.write(angles[i]);             //move servos to set angles
       }
       if(i==1){
-        index.write(angles[i]);
+        INDEX.write(angles[i]);
       }
       if(i==2){
         middle.write(angles[i]);

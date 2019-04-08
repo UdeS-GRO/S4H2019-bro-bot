@@ -11,7 +11,7 @@
 #define INDEX_PIN A7
 #define MIDDLE_PIN A6
 #define NB_MESSAGE 3
-#define SIZE_MESSAGE_BUFFER 20
+#define SIZE_MESSAGE_BUFFER 100
 
 RF24 radio(7, 8); // CE, CSN
 
@@ -29,7 +29,7 @@ int fingerPins[3]={THUMB_PIN,INDEX_PIN,MIDDLE_PIN};
 int CalibrationVals[2][3];   
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   pinMode(THUMB_PIN, INPUT);
   pinMode(INDEX_PIN, INPUT);
@@ -153,10 +153,10 @@ void read_sensor(void)
     old_finger_2 = finger_2;
   }
   /* Add message here and change the NB_MESSAGE to fit the number of strings below */
-  message[0] = String("finger_0 " + String(finger_0)  + "\n");
-  message[1] = String("finger_1 " + String(finger_1)  + "\n");
-  message[2] = String("finger_2 " + String(finger_2)  + "\n");
-  Serial.print(message[0]+" "+message[1]+" " + message[2]);
+  message[0] = String(String(finger_0)+",");
+  message[1] = String(String(finger_1)+",");
+  message[2] = String(String(finger_2)+";"+" ");
+  //Serial.print(message[0]+message[1]+message[2]);
   //message[3] = String("\n");
   //delay(1000);
 }
@@ -165,11 +165,13 @@ void send_message(void)
 {
   int counter =0;
   char message_buff[SIZE_MESSAGE_BUFFER]="";
-  
-  for(counter=0; counter < NB_MESSAGE; counter++)
-  {
-    message[counter].toCharArray(message_buff,message[counter].length());
+
+  message[0] = message[0]+message[1]+message[2];
+  Serial.println(message[0]);
+  /*for(counter=0; counter < NB_MESSAGE; counter++)
+  {*/
+    message[0].toCharArray(message_buff,message[0].length());
     radio.write(&message_buff, sizeof(message_buff));     // Send over the radio
     memset(message_buff, 0, sizeof(message_buff));        //Clear the buffer
-  }
+  //}
 }

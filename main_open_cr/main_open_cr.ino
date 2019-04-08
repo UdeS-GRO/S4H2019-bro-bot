@@ -8,6 +8,7 @@
 #include "p_monitor.h"
 #include "Axis.h"
 #include "HandControl.h"
+#include "Glove.h"
 
 
 #if defined(__OPENCM904__)
@@ -50,7 +51,6 @@ bool MaxLS[NUMBER_OF_AXIS];
 
 //Function declarations
 void read_serial(void);
-void read_radio(void);
 void torque_control(Axis * axis);
 void fix_com(void);
 void ack_msg(void);
@@ -66,7 +66,7 @@ void setup()
     Serial.begin(57600);
     while(!Serial);     // Wait until the serial is ready
     
-    fix_com();
+    fix_com();    // fait bugger le opencr
     
     /* Axis creation*/
     Axis_table[0] = NULL; //There is no axis 0
@@ -91,40 +91,57 @@ void setup()
     pinMode(inMaxLS02, INPUT);
     pinMode(inMinLS03, INPUT);
     pinMode(inMaxLS03, INPUT);
+
+    // Initialisation of glove communication
+    RF24 radio(7, 8); // CE, CSN
+    const byte address[6] = "gant0";
+    radio.begin();
+    radio.openReadingPipe(0, address);
+    radio.setPALevel(RF24_PA_MIN);
+    radio.startListening();
+    attach_motor();
+    
 }
 
 void loop() 
 {
   short axis_index;
   
-  //Axis_table[1]->readStatus();
+  Axis_table[1]->readStatus();
   Axis_table[2]->readStatus();
-  //Axis_table[3]->readStatus();
+  Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
-  limitSwitch();           
+  //limitSwitch();           
   
   //Read message
-  read_serial();
-  read_radio();
+  //read_serial();
+  if(radio.available()){
+    read_radio();
+  }
 
+  motor_control(finger_to_move[0][0],finger_to_move[1][0]);
+  motor_control(finger_to_move[0][1],finger_to_move[1][1]);
+  motor_control(finger_to_move[0][2],finger_to_move[1][2]);
+  
 
 
   //======Computing======
   // Torque control
-  for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+  /*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
     Axis_table[axis_index]->verifGoalAchieve(); // faire un mode debug
     torque_control(Axis_table[axis_index]);
-  }
+  }*/
 
   // Finger control
-  int finger_index;
+  //motor_control(finger_to_move[0][1],finger_to_move[1][1]);
+  /*int finger_index;
   for (finger_index =1; finger_index <= NUMBER_OF_FINGERS; finger_index++)
   {
     finger_control(finger_index);
   }
-
+  */
   // Moveto control
   for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
@@ -196,12 +213,6 @@ void torque_control(Axis * axis)
     cmd_tx[1] = String(axis->ID); 
     dynamixel_command(cmd_tx);
   }
-}
-
-
-void read_radio(void)
-{
-  //À rajouter
 }
 
 void read_serial(void)
