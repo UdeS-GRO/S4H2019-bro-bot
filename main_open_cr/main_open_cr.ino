@@ -522,6 +522,13 @@ void split(String data, char separator, String* temp)
   }
 }
 
+/**
+* this function read a string and put every word separate by a space in a list. We use it to receive the commands
+* in readSerial()
+* 
+* @param data to read, what is used to detect where to separate the date, which list to put the separate data in
+* @return Nothing.
+*/
 void glove_check(void){
   if(hand_control->getMode()==GLOVE){
     if(radio.available()){
