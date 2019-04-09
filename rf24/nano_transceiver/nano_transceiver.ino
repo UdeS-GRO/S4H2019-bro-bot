@@ -25,6 +25,7 @@ float filter_signal(float signal_to_filter);
 float old_finger_0 = 0;
 float old_finger_1 = 0;
 float old_finger_2 = 0;
+float offset_finger = 1.5;
 int fingerPins[3]={THUMB_PIN,INDEX_PIN,MIDDLE_PIN};
 int CalibrationVals[2][3];   
 
@@ -67,7 +68,12 @@ void loop()
   
 //}
 
-
+/*Calibrates de flex sensors by seting minimum average value when the hand is extended
+ * and average maximum value when it is in fist position
+ * 
+ * @param Nothing
+ * @return Nothing
+ */
 void CalibrateFlexSensors(){
   int calibrationCount=0;
   while(calibrationCount<=1){
@@ -110,18 +116,21 @@ void CalibrateFlexSensors(){
     Serial.println();
   }
 }
-
+/* Read the flex sensors and translate it in a value of 0 to 20. so 1 unity is 19 degrees
+ * Because the value can vary a little bit, there is an offset to exceed to change the value 
+ *   
+ * @param Nothing
+ * @return Nothing 
+ */
 void read_sensor(void)
-{
-    
-
+{ 
   //int finger_0 = lowpassFilter.input(analogRead(INDEX_PIN)); //Read voltage of the voltage divider of the index
   float finger_0 = analogRead(THUMB_PIN);
   //Serial.println("THUMB_PIN: " + String(finger_0) + "\n");
   //finger_0 = filter_signal(finger_0, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_0 = map(finger_0, CalibrationVals[0][0], CalibrationVals[1][0], 0, 20);
   
-  if(finger_0 < old_finger_0+2 && finger_0 > old_finger_0-2){
+  if(finger_0 < old_finger_0 + offset_finger && finger_0 > old_finger_0 - offset_finger){
     finger_0 = old_finger_0;
   }
  
@@ -134,7 +143,7 @@ void read_sensor(void)
   //finger_1 = filter_signal(finger_1, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_1 = map(finger_1, CalibrationVals[0][1], CalibrationVals[1][1], 0, 20);
   
-  if(finger_1 < old_finger_1+1.5 && finger_1 > old_finger_1-1.5){
+  if(finger_1 < old_finger_1 + offset_finger && finger_1 > old_finger_1 - offset_finger){
     finger_1 = old_finger_1;
   }
   else{
@@ -146,7 +155,7 @@ void read_sensor(void)
   //finger_2 = filter_signal(finger_2, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_2 = map(finger_2, CalibrationVals[0][2], CalibrationVals[1][2], 0, 20);
   
-  if(finger_2 < old_finger_2+1.5 && finger_2 > old_finger_2-1.5){
+  if(finger_2 < old_finger_2 + offset_finger && finger_2 > old_finger_2 - offset_finger){
     finger_2 = old_finger_2;
   }
   else{
@@ -160,7 +169,11 @@ void read_sensor(void)
   //message[3] = String("\n");
   //delay(1000);
 }
-
+/* This function send the value computed in the read_sensor function
+ *  
+ * @param which axis is concerned
+ * @return nothing
+ */
 void send_message(void)
 {
   int counter =0;
