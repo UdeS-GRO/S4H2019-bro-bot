@@ -10,21 +10,35 @@
 class counter_filter
 {
 public:
+
+	// ************************
+	// **** class constructor and destructor ****
 	counter_filter( float new_reference, float new_maxDifference, int new_counterBeforeTrigger);
 	~counter_filter();
 
+	// ************************
+	// **** compute method ****
 	bool compute(float present_value);
-	bool isTriggered(void);
+
+
+	// ************************
+	// **** set and get the actual value of the private variable ****
 
 	void setReference(float new_reference);
 	void setMaxDifference(float new_maxDifference);
 	void setCounterBeforeTrigger(int new_counterBeforeTrigger);
+    int getCounter(void);
+	bool isTriggered(void);
+
+	// ************************
+	// **** control methods ****
 	int reset_counter(void);
-	int getCounter(void);
+
+
 	int	counter;
 
-
-
+	// ************************
+	// **** variable used in the counter ****
 private:
 	float reference;
 	float maxDifference;
