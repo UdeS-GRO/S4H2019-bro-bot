@@ -873,6 +873,7 @@ if __name__ == '__main__':
     #t1_write.join()
     threads_on_ = False
     t2_read.join()
+    t_record.join()
 
 # If the code is run with test flag to true. Set the send function to a dummy send function and don't call the serial thread
 if __name__ == '__test__':
@@ -886,3 +887,4 @@ if __name__ == '__test__':
 
     #t1_write.join()
     threads_on_ = False
+    t_record.join()
