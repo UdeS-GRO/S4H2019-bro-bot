@@ -59,6 +59,7 @@ void finger_control(int finger_number);
 void stopBySwitch(Axis * axis);
 void limitSwitch(void);
 void split(String data, char separator, String* temp);
+void glove_check(void);
 
 // Initialisation
 void setup()
@@ -93,14 +94,7 @@ void setup()
     pinMode(inMinLS03, INPUT);
     pinMode(inMaxLS03, INPUT);
 
-    // Initialisation of glove communication
-    RF24 radio(7, 8); // CE, CSN
-    const byte address[6] = "gant0";
-    radio.begin();
-    radio.openReadingPipe(0, address);
-    radio.setPALevel(RF24_PA_MIN);
-    radio.startListening();
-    attach_motor();
+    
     
 }
 
@@ -113,20 +107,13 @@ void loop()
   Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
-  //limitSwitch();           
+  limitSwitch();           
   
   //Read message
-  //read_serial();
-  if(radio.available()){
-    read_radio();
-  }
-
-  motor_control(finger_to_move[0][0],finger_to_move[1][0]);
-  motor_control(finger_to_move[0][1],finger_to_move[1][1]);
-  motor_control(finger_to_move[0][2],finger_to_move[1][2]);
+  read_serial();
   
-
-
+  glove_check();
+  
   //======Computing======
   // Torque control
   /*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
@@ -136,13 +123,12 @@ void loop()
   }*/
 
   // Finger control
-  //motor_control(finger_to_move[0][1],finger_to_move[1][1]);
-  /*int finger_index;
+  int finger_index;
   for (finger_index =1; finger_index <= NUMBER_OF_FINGERS; finger_index++)
   {
     finger_control(finger_index);
   }
-  */
+  
   // Moveto control
   for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
@@ -387,6 +373,8 @@ void finger_control(int finger_number)
   int new_PWM_cmd =0;
   if( hand_control.getMode() == LOCK)
   {
+    hand_control.getMotorValue();
+    hand_control.setMotorValue();
     /* do nothing and keep last position */
   }
   else if (hand_control.getMode() == FREE)
@@ -396,13 +384,15 @@ void finger_control(int finger_number)
     else if (hand_control.getMode() == GLOVE)
   {
     /* Read the commands sent by radio*/
-    new_PWM_cmd = hand_control.getFingerGloveValue(finger_number);
+    hand_control.setMotorValue();
+    //new_PWM_cmd = hand_control.getFingerGloveValue(finger_number);
     //Serial.println(String("Radio:" +String(new_PWM_cmd)));       //TODO :Add the pwm control
   }
     else if (hand_control.getMode() == GUI)
   {
     /* Read the last command sent by the GUI*/
-     new_PWM_cmd = hand_control.getFingerGuiValue(finger_number);
+    hand_control.setMotorValue();
+     //new_PWM_cmd = hand_control.getFingerGuiValue(finger_number);
      //Serial.println(String("GUI:" +String(new_PWM_cmd)));      //TODO :Add the pwm control
   }
 }
@@ -494,5 +484,16 @@ void split(String data, char separator, String* temp)
       break;
     }
     ++cnt;
+  }
+}
+
+void glove_check(void){
+  if(hand_control.getMode()==GLOVE){
+    if(radio.available()){
+      hand_control.read_radio();
+    }
+  }
+  if(hand_control.getMode()!=FREE){
+    hand_control.attachMotor();
   }
 }

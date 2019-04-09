@@ -20,6 +20,17 @@ HandControl::HandControl(int number_of_fingers)
 	finger_glove_cmd_ = new int[number_of_fingers];
 	mode = FREE;
 	nb_of_finger = number_of_fingers;
+	thumb.attach(pin_m1);
+  	INDEX.attach(pin_m2);
+  	middle.attach(pin_m3);
+
+	// Initialisation of glove communication
+    	radio = new RF24(6, 7); // CE, CSN
+    	const byte address[6] = "gant0";
+    	radio->begin();
+    	radio->openReadingPipe(0, address);
+    	radio->setPALevel(RF24_PA_MIN);
+    	radio->startListening();
 
 	int index;
 	for (index = 0; index < number_of_fingers; index++)
@@ -120,4 +131,50 @@ int HandControl::getFingerGloveValue(int finger_number)
 	{
 		return finger_glove_cmd_[finger_number - 1];
 	}
+}
+
+void HandControl::getMotorValue(void)
+{
+	//read servos angle
+	finger_glove_cmd_[0] = thumb.read();             
+	finger_glove_cmd_[1] = INDEX.read();
+	finger_glove_cmd_[2] = middle.read();
+}
+
+void HandControl::setMotorValue(void)
+{
+	//move servos to set angles
+	thumb.write(finger_glove_cmd_[0]);             
+	INDEX.write(finger_glove_cmd_[1]);
+	middle.write(finger_glove_cmd_[2]);
+}
+
+void HandControl::read_radio(void)
+{
+  radio->read(&text_radio, sizeof(text_radio));
+  int i = 0;
+  int finger_id = 0;
+
+  for(i=0;text_radio[i]!=';';i++){
+    finger_value_str += text_radio[i];
+    if(text_radio[i]==','){
+      finger_glove_cmd_[finger_id] = finger_value_str.toInt();
+      finger_id += 1;
+      finger_value_str = "";
+    }
+  }
+}
+
+void HandControl::detachMotor(void)
+{
+	thumb.detach();
+  	INDEX.detach();
+  	middle.detach();
+}
+
+void HandControl::attachMotor(void)
+{
+	thumb.attach(pin_m1);
+  	INDEX.attach(pin_m2);
+  	middle.attach(pin_m3);
 }

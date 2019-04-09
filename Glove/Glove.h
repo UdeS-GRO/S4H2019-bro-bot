@@ -28,7 +28,6 @@ String finger_value_str = "";
 float finger_value = 0;
 float finger_to_move[2][NUMBER_OF_FINGERS]{{4,5,6},{0,0,0}};
 int finger_id;
-int flexPins[] = {A0,A1,A2};
 int test = 0;
 
 void attach_motor(void) {
