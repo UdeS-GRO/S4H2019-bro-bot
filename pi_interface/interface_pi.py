@@ -741,7 +741,7 @@ auto.grid(row=0,column=4, padx=4, pady=4, sticky=W)
 #-------------Loop Routine ----------
 loopRoutine = BooleanVar()
 loopRout = Checkbutton(root, text="Loop", variable =loopRoutine, command=loop)
-loopRout.grid(row =1, column = 4, padx=4, pady= 4, sticky=W)
+loopRout.grid(row =0, column = 8, padx=4, pady= 4, sticky=W)
 
 #-------------Reset-------------------
 
@@ -868,11 +868,11 @@ if __name__ == '__main__':
     t_record.start()
 
     root.mainloop()
-    root.destroy()
 
     #t1_write.join()
     threads_on_ = False
     t2_read.join()
+    record.event.set()
     t_record.join()
 
 # If the code is run with test flag to true. Set the send function to a dummy send function and don't call the serial thread
@@ -883,8 +883,8 @@ if __name__ == '__test__':
 
     send = dummy_send
     root.mainloop()
-    root.destroy()
 
     #t1_write.join()
     threads_on_ = False
+    record.event.set()
     t_record.join()
