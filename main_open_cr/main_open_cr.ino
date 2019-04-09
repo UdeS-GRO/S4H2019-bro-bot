@@ -31,9 +31,10 @@
 String cmd[64]={"begin","57600"};
 String cmd_tx[20];                //String to send to the motor after computing
 
-HandControl hand_control(NUMBER_OF_FINGERS);
+HandControl *hand_control;
 
 Axis *Axis_table[NUMBER_OF_AXIS];
+
 
 
 // Hard Limit Switches inputs declaration
@@ -69,6 +70,9 @@ void setup()
     while(!Serial);     // Wait until the serial is ready
     
     //fix_com();    // fait bugger le opencr
+
+    hand_control = new HandControl(NUMBER_OF_FINGERS);
+
     
     /* Axis creation*/
     Axis_table[0] = NULL; //There is no axis 0
@@ -108,7 +112,7 @@ void loop()
   Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
-  limitSwitch();           
+  //limitSwitch();           
   
   //Read message
   read_serial();
@@ -312,7 +316,7 @@ void read_serial(void)
       else if (cmd[0] == "finger_move")            // to move a finger to a certain place
       {
         /* Read the PWM value from gui for a specific finger */
-        hand_control.setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
+        hand_control->setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
       }
   }
 }
@@ -330,22 +334,22 @@ void change_finger_control_mode(String new_mode)
   
   if(new_mode == "LOCK")
   {
-    hand_control.setMode(LOCK);
+    hand_control->setMode(LOCK);
     doModeExist = true;
   }
   else if(new_mode == "FREE")
   {
-    hand_control.setMode(FREE);
+    hand_control->setMode(FREE);
     doModeExist = true;
   }
   else if(new_mode == "GUI")
   {
-    hand_control.setMode(GUI);
+    hand_control->setMode(GUI);
     doModeExist = true;
   }
   else if(new_mode == "GLOVE")
   {
-    hand_control.setMode(GLOVE);
+    hand_control->setMode(GLOVE);
     doModeExist = true;
   }
   else
@@ -354,7 +358,7 @@ void change_finger_control_mode(String new_mode)
   if (doModeExist)
   {
     Serial.print(String("New finger control mode: " + new_mode));
-    Serial.println(String( ": " + String(hand_control.getMode())));
+    Serial.println(String( ": " + String(hand_control->getMode())));
   }
 }
 
@@ -388,28 +392,28 @@ void ack_msg(void)
 void finger_control(int finger_number)
 {
   int new_PWM_cmd =0;
-  if( hand_control.getMode() == LOCK)
+  if( hand_control->getMode() == LOCK)
   {
-    hand_control.getMotorValue();
-    hand_control.setMotorValue();
+    hand_control->getMotorValue();
+    hand_control->setMotorValue();
     /* do nothing and keep last position */
   }
-  else if (hand_control.getMode() == FREE)
+  else if (hand_control->getMode() == FREE)
   {
     /* Set the PWM to 0 to disable the servo*/          //TODO :Add the pwm control
   }
-    else if (hand_control.getMode() == GLOVE)
+    else if (hand_control->getMode() == GLOVE)
   {
     /* Read the commands sent by radio*/
-    hand_control.setMotorValue();
-    //new_PWM_cmd = hand_control.getFingerGloveValue(finger_number);
+    hand_control->setMotorValue();
+    //new_PWM_cmd = hand_control->getFingerGloveValue(finger_number);
     //Serial.println(String("Radio:" +String(new_PWM_cmd)));       //TODO :Add the pwm control
   }
-    else if (hand_control.getMode() == GUI)
+    else if (hand_control->getMode() == GUI)
   {
     /* Read the last command sent by the GUI*/
-    hand_control.setMotorValue();
-     //new_PWM_cmd = hand_control.getFingerGuiValue(finger_number);
+    hand_control->setMotorValue();
+     //new_PWM_cmd = hand_control->getFingerGuiValue(finger_number);
      //Serial.println(String("GUI:" +String(new_PWM_cmd)));      //TODO :Add the pwm control
   }
 }
@@ -519,12 +523,12 @@ void split(String data, char separator, String* temp)
 }
 
 void glove_check(void){
-  if(hand_control.getMode()==GLOVE){
+  if(hand_control->getMode()==GLOVE){
     if(radio.available()){
-      hand_control.read_radio();
+      hand_control->read_radio();
     }
   }
-  if(hand_control.getMode()!=FREE){
-    hand_control.attachMotor();
+  if(hand_control->getMode()!=FREE){
+    hand_control->attachMotor();
   }
 }

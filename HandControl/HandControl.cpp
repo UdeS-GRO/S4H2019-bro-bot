@@ -25,7 +25,7 @@ HandControl::HandControl(int number_of_fingers)
   	middle.attach(pin_m3);
 
 	// Initialisation of glove communication
-    	radio = new RF24(6, 7); // CE, CSN
+    	radio = new RF24(7, 8); // CE, CSN
     	const byte address[6] = "gant0";
     	radio->begin();
     	radio->openReadingPipe(0, address);
@@ -152,6 +152,7 @@ void HandControl::setMotorValue(void)
 void HandControl::read_radio(void)
 {
   radio->read(&text_radio, sizeof(text_radio));
+  Serial.println("je suis dans read_radio");
   int i = 0;
   int finger_id = 0;
 
