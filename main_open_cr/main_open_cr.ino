@@ -37,12 +37,12 @@ Axis *Axis_table[NUMBER_OF_AXIS];
 
 
 // Hard Limit Switches inputs declaration
-int inMinLS01 = 2;
-int inMaxLS01 = 3;
-int inMinLS02 = 4;
-int inMaxLS02 = 5;
-int inMinLS03 = 6;
-int inMaxLS03 = 7;
+int inMinLS01 = 8;
+int inMaxLS01 = 9;
+int inMinLS02 = 10;
+int inMaxLS02 = 11;
+int inMinLS03 = 12;
+int inMaxLS03 = 13;
 
 // Limit Switches input status
 bool MinLS[NUMBER_OF_AXIS];
@@ -107,20 +107,22 @@ void setup()
 void loop() 
 {
   short axis_index;
-  
+
+  // update all the status of the motors
   Axis_table[1]->readStatus();
   Axis_table[2]->readStatus();
   Axis_table[3]->readStatus();
     
   // Limits Switch digital Read
-  //limitSwitch();           
+  limitSwitch();           
   
   //Read message
-  //read_serial();
+  read_serial();
   if(radio.available()){
     read_radio();
   }
 
+ 
   motor_control(finger_to_move[0][0],finger_to_move[1][0]);
   motor_control(finger_to_move[0][1],finger_to_move[1][1]);
   motor_control(finger_to_move[0][2],finger_to_move[1][2]);
@@ -128,33 +130,45 @@ void loop()
 
 
   //======Computing======
-  // Torque control
-  /*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+  
+  // Torque control and verif if goal achieve of the moveTo
+  for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
     Axis_table[axis_index]->verifGoalAchieve(); // faire un mode debug
     torque_control(Axis_table[axis_index]);
-  }*/
+  }
 
   // Finger control
   //motor_control(finger_to_move[0][1],finger_to_move[1][1]);
-  /*int finger_index;
+  int finger_index;
   for (finger_index =1; finger_index <= NUMBER_OF_FINGERS; finger_index++)
   {
     finger_control(finger_index);
   }
-  */
+  
   // Moveto control
-  for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+  /*for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
-    //torque_control(Axis_table[axis_index]);
-  }
+    torque_control(Axis_table[axis_index]);
+  }*/
 }
 
+/* Stop the motor when it's called. This function is called in limitSwitch function
+ * 
+ * parameters : which axis is concerned
+ * return nothing
+ */
 void stopBySwitch(Axis * axis)
 {
   axis->stopCmd();
 }
-
+/* This function turn off the torque when someone want to move the robot arm, it turns it back on when the robot stop to move.
+ * It detects when the torque is anormally high as someone is pushing on it, and count to a certain number to verify if it's not only a
+ * small collision. When the count is done, it's at that moment the torque turn off and turn back on after an other count which starts when the arm stop moving
+ * 
+ * parameters : which axis is concerned
+ * return nothing
+ */
 void torque_control(Axis * axis)
 {
   if (axis->torqueControlEnable ==true)
@@ -219,6 +233,12 @@ void torque_control(Axis * axis)
   }
 }
 
+/*  This function read the command that comes from the serial monitor or the python interface. Depending of the cmd send by the user, it calls the
+ *  function related to it. 
+ * 
+ * parameters : nothing
+ * return nothing
+ */
 void read_serial(void)
 {
     if(Serial.available())
@@ -237,46 +257,45 @@ void read_serial(void)
         axis = Axis_table[ID];
       
        
-         if(cmd[0] == "zero")
+         if(cmd[0] == "zero")       // Homing
          {
-            //axis->Zero();
             axis->HomeRequest(&MinLS[1]);
          }
          
-        else if(cmd[0] == "speed")
+        else if(cmd[0] == "speed")  //  send a velocity to the motor
          {
             axis->moveAtSpeed(cmd[2]);
          }
          
-        else if(cmd[0] == "rd")
+        else if(cmd[0] == "rd")    // to read a Register of the motor 
          {
             axis->readRegister(cmd[2]);
          }
-        else if(cmd[0] == "wr")
+        else if(cmd[0] == "wr")     // write in the register of the motor
          {
             axis->writeRegister(cmd[1],cmd[2].toInt());
          }
-        else if(cmd[0] == "Pos")
+        else if(cmd[0] == "Pos")    // know the actual position of the motor
          {
             Serial.print(axis->getPosition());
          }
-        else if(cmd[0] == "Move")
+        else if(cmd[0] == "Move")   // Know if the motor is presently moving
          {
             axis->getMovingStatus();
          }
-        else if(cmd[0] == "Cur")
+        else if(cmd[0] == "Cur")  // Know the actual Current of the motor [1 unit = 2.69 [mA] ]
          {
             axis->getCurrent();
          }
-        else if(cmd[0] == "Torq")
+        else if(cmd[0] == "Torq") // Know the actual torque of the motor [1 unit = 2.69 [mA] ]
          {
             axis->getTorque();
          }
-        else if(cmd[0] == "Vel")
+        else if(cmd[0] == "Vel") // Know the actual velocity of the motor[ 1 unity is 0.229 rpm ]
          {
             Serial.println(axis->getVelocity());
          }
-         else if (cmd[0] == "stop")
+         else if (cmd[0] == "stop") // stop each motor 
           {
             short axis_index;
              // Set the motor velocity to 0 and indicates that it has reach is position
@@ -285,29 +304,15 @@ void read_serial(void)
                 Axis_table[axis_index]->stopCmd();
               } 
           }
-        else if(cmd[0] == "moveto")
+        else if(cmd[0] == "moveto") // move a motor to a certain angle (degrees)
          {
-            /*int goalpos = cmd[2].toFloat();
-            Serial.println(goalpos);
-            axis->setGoalPosition(goalpos);   //idée comme ça, on utilise une 4e commande pour la vitesse voulue. On pourrait même setuper 3 vitesses prédéfini genre slow, medium, fast ****
-            if(goalpos < axis->getPosition())
-            {
-              axis->moveAtSpeed("-50");
-              axis->setAtPosition(false);
-            }
-            if(goalpos > axis->getPosition())
-            {
-              axis ->moveAtSpeed("50");
-              axis->setAtPosition(false);
-            }*/
-
             axis->Moveto(cmd[2].toFloat());
          }
-        else if (cmd[0] == "torque_control_enable")
+        else if (cmd[0] == "torque_control_enable") // to use the torque control mode
         {
           axis->torqueControlEnable = true;
         }
-        else if (cmd[0] == "torque_control_disable")
+        else if (cmd[0] == "torque_control_disable") // ignore the torque control mode
         {
           axis->torqueControlEnable = false;
         }
@@ -315,23 +320,24 @@ void read_serial(void)
       
       /* Message not destined to motors */
       /* Finger control message */
-      if (cmd[0] == "finger_mode")
+      if (cmd[0] == "finger_mode")                  // change the finger mode
       {
           change_finger_control_mode(cmd[1]);
       }
-      else if (cmd[0] == "finger_move")
+      else if (cmd[0] == "finger_move")            // to move a finger to a certain place
       {
         /* Read the PWM value from gui for a specific finger */
         hand_control.setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
       }
-      else if (cmd[0] == "stop")
-      {
-        
-      }
-    }   
+  }
 }
-
-
+/**
+* This function change the mode in which the finger_control is. 4 modes are avaible
+* LOCK, FREE, GUI, GLOVE
+* 
+* @param mode we want
+* @return Nothing.
+*/
 void change_finger_control_mode(String new_mode)
 {
   bool doModeExist =false;
@@ -367,7 +373,7 @@ void change_finger_control_mode(String new_mode)
   }
 }
 
-/*void fix_com(void)
+/*void fix_com(void)      VOIR SI FONCTIONNE BIEN SANS CETTE FONCTION. SI OUI ON L'EFFACE
 {
     cmd_tx[0] = String("begin");    //Bug qui doit être régler
     cmd_tx[1] = String("57600"); 
@@ -377,11 +383,23 @@ void change_finger_control_mode(String new_mode)
     dynamixel_command(cmd_tx);
 }*/
 
+/**
+* This function print "nolidge" to acknowledge when something is tested and works.
+* 
+* @param Nothin
+* @return Nothing.
+*/
 void ack_msg(void)
 {
   Serial.println("nolidge");
 }
 
+/**
+* This function control the finger depending of the mode it is in. If it's in Glove mode, the command are coming from the Glove by instance
+* 
+* @param which finger is concern
+* @return Nothing.
+*/
 void finger_control(int finger_number)
 {
   int new_PWM_cmd =0;
@@ -407,6 +425,13 @@ void finger_control(int finger_number)
   }
 }
 
+/**
+* This function detects if a limit switch is on. When it is, it stops the motor and forbid it to go in the direcetion it was going 
+* until it moves the other side
+* 
+* @param Nothin
+* @return Nothing.
+*/
 void limitSwitch(void)
 {
   // Limits Switch digital Read
@@ -471,6 +496,13 @@ for (axis_index =1; axis_index < NUMBER_OF_AXIS-1 ; axis_index++)      // ENLEVE
   }
 }
 
+/**
+* this function read a string and put every word separate by a space in a list. We use it to receive the commands
+* in readSerial()
+* 
+* @param data to read, what is used to detect where to separate the date, which list to put the separate data in
+* @return Nothing.
+*/
 void split(String data, char separator, String* temp)
 {
   int cnt = 0;
