@@ -140,8 +140,8 @@ void loop()
 
 /* Stop the motor when it's called. This function is called in limitSwitch function
  * 
- * parameters : which axis is concerned
- * return nothing
+ * @param which axis is concerned
+ * @return nothing
  */
 void stopBySwitch(Axis * axis)
 {
@@ -151,8 +151,8 @@ void stopBySwitch(Axis * axis)
  * It detects when the torque is anormally high as someone is pushing on it, and count to a certain number to verify if it's not only a
  * small collision. When the count is done, it's at that moment the torque turn off and turn back on after an other count which starts when the arm stop moving
  * 
- * parameters : which axis is concerned
- * return nothing
+ * @param which axis is concerned
+ * @return nothing
  */
 void torque_control(Axis * axis)
 {
@@ -221,8 +221,8 @@ void torque_control(Axis * axis)
 /*  This function read the command that comes from the serial monitor or the python interface. Depending of the cmd send by the user, it calls the
  *  function related to it. 
  * 
- * parameters : nothing
- * return nothing
+ * @param nothing
+ * @return nothing
  */
 void read_serial(void)
 {
