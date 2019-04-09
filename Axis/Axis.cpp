@@ -200,9 +200,9 @@ void Axis::HomeRequest(bool *HomeSW)
 	if(*HomeSW)
 	{
 		stopCmd();
-		if (getMovingStatus() == 0)
+		if (Sts_Moving == 0)
         {
-			HomeOffset = 0 - getPosition();
+			HomeOffset = 0 - Sts_ActualPosition;
 			Sts_Homing = 0;
 			Sts_Homed = 1;
 			Serial.println(log);
@@ -275,26 +275,38 @@ void Axis::verifGoalAchieve()
     }
 }
 
+/**
+* Makes the motor spin in the direction of the goal position. It also set a goal position.
+* Needs the function verifGoalAchieve to stop the motor when it actually reaches it's goalPosition
+*
+* @param the goalPosition in degrees
+* @return Nothing.
+*/
+
 void Axis::Moveto(float goalpos)
 {
-	Sts_GoalPosition = goalpos;
-	Serial.println(Sts_GoalPosition);
+    if (!Sts_Homed)
+    {
+        Serial.println("you can't use this command until you execute the homing sequence")
+    }
+    else if(Sts_Homed)
+    {
+        Sts_GoalPosition = goalpos;
+        Serial.println(Sts_GoalPosition);
 
-	if(Sts_GoalPosition < Sts_ActualPosition)
-	{
-		rotation_direction = -1;
-		moveAtSpeed("-50");
-		JMWatchdog = false;
-		Serial.println("c'est moi le probleme negatif");
-	}
-	if(Sts_GoalPosition > Sts_ActualPosition)
-	{
-		rotation_direction = 1;
-		moveAtSpeed("50");
-		JMWatchdog = false;
-		Serial.println("c'est moi le probleme positif");
-
-	}
+        if(Sts_GoalPosition < Sts_ActualPosition)
+        {
+            rotation_direction = -1;
+            moveAtSpeed("-50");
+            JMWatchdog = false;
+        }
+        if(Sts_GoalPosition > Sts_ActualPosition)
+        {
+            rotation_direction = 1;
+            moveAtSpeed("50");
+            JMWatchdog = false;
+        }
+    }
 }
 
 
