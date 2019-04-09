@@ -11,7 +11,7 @@
 *
 * Initialize the size of the finger data arrays and the mode to the FREE mode
 *
-* @param The new mode.
+* @param The number of fingers
 * @return Nothing.
 */
 HandControl::HandControl(int number_of_fingers)
@@ -119,8 +119,7 @@ void HandControl::setFingerGloveValue(int finger_number, int new_value)
 }
 
 /**
-* Get the value of the PWM for a specific motor received from the GUI.
-*
+* Get the value of the actual position of a specified finger
 *
 * @param The number of the finger (index-1)
 * @return The PWM value of the corresponding finger.
@@ -133,6 +132,12 @@ int HandControl::getFingerGloveValue(int finger_number)
 	}
 }
 
+/**
+* Get the value of the actual position of each servos 
+*
+* @param The new mode.
+* @return Nothing.
+*/
 void HandControl::getMotorValue(void)
 {
 	//read servos angle
@@ -141,6 +146,12 @@ void HandControl::getMotorValue(void)
 	finger_glove_cmd_[2] = middle.read();
 }
 
+/**
+* send the commands to the servos related to the fingers
+*
+* @param The new mode.
+* @return Nothing.
+*/
 void HandControl::setMotorValue(void)
 {
 	//move servos to set angles
@@ -149,6 +160,13 @@ void HandControl::setMotorValue(void)
 	middle.write(finger_glove_cmd_[2]);
 }
 
+/**
+* translate the command receive by the radio to work with the servos. 
+*
+*
+* @param The new mode.
+* @return Nothing.
+*/
 void HandControl::read_radio(void)
 {
   radio->read(&text_radio, sizeof(text_radio));
@@ -166,6 +184,14 @@ void HandControl::read_radio(void)
   }
 }
 
+/**
+* detach the srevos related to each fingers.
+* Used when it is in Free mode
+*
+*
+* @param The new mode.
+* @return Nothing.
+*/
 void HandControl::detachMotor(void)
 {
 	thumb.detach();
@@ -173,6 +199,12 @@ void HandControl::detachMotor(void)
   	middle.detach();
 }
 
+/**
+* Attach a servo for each finger 
+*
+* @param The new mode.
+* @return Nothing.
+*/
 void HandControl::attachMotor(void)
 {
 	thumb.attach(pin_m1);

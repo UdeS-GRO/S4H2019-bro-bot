@@ -52,12 +52,16 @@ public:
 	void setMode(ControlFingerState new_mode);
 	ControlFingerState getMode(void);
 
+	// *****************************
+	// **** individual function(touch a specified finger) ****
 	void setFingerGuiValue(int finger_number, int new_value);
 	int getFingerGuiValue(int finger_number);
 
 	void setFingerGloveValue(int finger_number, int new_value);
 	int getFingerGloveValue(int finger_number);
 
+	// *****************************
+	// **** general function(touch every finger) ****
 	void attachMotor(void);
 	void detachMotor(void);
 

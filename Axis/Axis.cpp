@@ -268,7 +268,7 @@ void Axis::verifGoalAchieve()
 				Serial.println("arrive a goal pos");
 			}
 			if(Sts_ActualPosition <= MinSoftlimit) {
-				Serial.println("limite depassé");
+				Serial.println("limite depassï¿½");
 			}
             }
         }
@@ -287,7 +287,7 @@ void Axis::Moveto(float goalpos)
 {
     if (!Sts_Homed)
     {
-        Serial.println("you can't use this command until you execute the homing sequence")
+        Serial.println("you can't use this command until you execute the homing sequence");
     }
     else if(Sts_Homed)
     {
