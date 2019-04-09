@@ -760,7 +760,7 @@ slider_group_y_offset = 150
 l_Finger1= Label(root,text = "Finger 1")
 l_Finger1.place(x = slider_group_x_offset, y = slider_group_y_offset + 20)
 
-sliderFinger1 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger1_event)
+sliderFinger1 = Scale(root,  from_=0, to=180, orient=constants.HORIZONTAL, length=150, command=finger1_event)
 sliderFinger1.place(x = slider_group_x_offset+66 , y = slider_group_y_offset)
 
 #-------------Slider second finger-------------
@@ -768,7 +768,7 @@ sliderFinger1.place(x = slider_group_x_offset+66 , y = slider_group_y_offset)
 l_Finger2= Label(root,text = "Finger 2")
 l_Finger2.place(x = slider_group_x_offset, y = slider_group_y_offset + 20+40)
 
-sliderFinger2 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger2_event)
+sliderFinger2 = Scale(root,  from_=0, to=180, orient=constants.HORIZONTAL, length=150, command=finger2_event)
 sliderFinger2.place(x = slider_group_x_offset+66 , y = slider_group_y_offset+40)
 
 #-------------Slider third finger-------------
@@ -776,7 +776,7 @@ sliderFinger2.place(x = slider_group_x_offset+66 , y = slider_group_y_offset+40)
 l_Finger3= Label(root,text = "Finger 3")
 l_Finger3.place(x = slider_group_x_offset, y = slider_group_y_offset + 20+80)
 
-sliderFinger3 = Scale(root,  from_=0, to=200, orient=constants.HORIZONTAL, length=150, command=finger3_event)
+sliderFinger3 = Scale(root,  from_=0, to=180, orient=constants.HORIZONTAL, length=150, command=finger3_event)
 sliderFinger3.place(x = slider_group_x_offset+66 , y = slider_group_y_offset+80)
 
 #------------- Finger select control mode -------------
