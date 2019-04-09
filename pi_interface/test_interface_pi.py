@@ -20,8 +20,8 @@ class TestInterface(unittest.TestCase):
 
     def setUp(self):
 
-        while len(interface_pi.instructionListe) > 0:
-            interface_pi.instructionListe.pop()
+        while len(interface_pi.instructionListe_) > 0:
+            interface_pi.instructionListe_.pop()
 
         self.clear_text(interface_pi.routine)
         self.clear_entry(interface_pi.instructEntry)
@@ -30,9 +30,9 @@ class TestInterface(unittest.TestCase):
         interface_pi.routine.insert(INSERT, "x")
         self.update_events()
 
-        interface_pi.listeMoteur1[0] = 0
-        interface_pi.listeMoteur2[0] = 0
-        interface_pi.listeMoteur3[0] = 0
+        interface_pi.listeMoteur1_[0] = 0
+        interface_pi.listeMoteur2_[0] = 0
+        interface_pi.listeMoteur3_[0] = 0
 
         interface_pi.moteur1Entry.delete(0, 10)
         interface_pi.moteur2Entry.delete(0, 10)
@@ -62,14 +62,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur1[0], -10,"Valeur de la commande du moteur 1 ne s'incrémente pas de -10")
+        self.assertEqual(interface_pi.listeMoteur1_[0], -10,"Valeur de la commande du moteur 1 ne s'incrémente pas de -10")
         self.assertEqual(interface_pi.moteur1Entry.get(), '-10', "La valeur -10 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.left1Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur1[0], -20,"Valeur de la commande du moteur 1 ne s'incrémente pas de -20")
+        self.assertEqual(interface_pi.listeMoteur1_[0], -20,"Valeur de la commande du moteur 1 ne s'incrémente pas de -20")
         self.assertEqual(interface_pi.moteur1Entry.get(), '-20', "La valeur -20 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -81,14 +81,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur1[0], 10,"Valeur de la commande du moteur 1 ne s'incrémente pas de 10")
+        self.assertEqual(interface_pi.listeMoteur1_[0], 10,"Valeur de la commande du moteur 1 ne s'incrémente pas de 10")
         self.assertEqual(interface_pi.moteur1Entry.get(), '10', "La valeur 10 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.right1Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur1[0], 20,"Valeur de la commande du moteur 1 ne s'incrémente pas de 20")
+        self.assertEqual(interface_pi.listeMoteur1_[0], 20,"Valeur de la commande du moteur 1 ne s'incrémente pas de 20")
         self.assertEqual(interface_pi.moteur1Entry.get(), '20', "La valeur 20 du moteur 1 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -135,14 +135,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur2[0], -10,"Valeur de la commande du moteur 2 ne s'incrémente pas de -10")
+        self.assertEqual(interface_pi.listeMoteur2_[0], -10,"Valeur de la commande du moteur 2 ne s'incrémente pas de -10")
         self.assertEqual(interface_pi.moteur2Entry.get(), '-10', "La valeur -10 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.left2Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur2[0], -20,"Valeur de la commande du moteur 2 ne s'incrémente pas de -20")
+        self.assertEqual(interface_pi.listeMoteur2_[0], -20,"Valeur de la commande du moteur 2 ne s'incrémente pas de -20")
         self.assertEqual(interface_pi.moteur2Entry.get(), '-20', "La valeur -20 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -153,14 +153,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur2[0], 10,"Valeur de la commande du moteur 2 ne s'incrémente pas de -10")
+        self.assertEqual(interface_pi.listeMoteur2_[0], 10,"Valeur de la commande du moteur 2 ne s'incrémente pas de -10")
         self.assertEqual(interface_pi.moteur2Entry.get(), '10', "La valeur 10 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.right2Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur2[0], 20,"Valeur de la commande du moteur 2 ne s'incrémente pas de -20")
+        self.assertEqual(interface_pi.listeMoteur2_[0], 20,"Valeur de la commande du moteur 2 ne s'incrémente pas de -20")
         self.assertEqual(interface_pi.moteur2Entry.get(), '20', "La valeur -20 du moteur 2 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -206,14 +206,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur3[0], -10,"Valeur de la commande du moteur 3 ne s'incrémente pas de -10")
+        self.assertEqual(interface_pi.listeMoteur3_[0], -10,"Valeur de la commande du moteur 3 ne s'incrémente pas de -10")
         self.assertEqual(interface_pi.moteur3Entry.get(), '-10', "La valeur -10 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.left3Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur3[0], -20,"Valeur de la commande du moteur 3 ne s'incrémente pas de -20")
+        self.assertEqual(interface_pi.listeMoteur3_[0], -20,"Valeur de la commande du moteur 3 ne s'incrémente pas de -20")
         self.assertEqual(interface_pi.moteur3Entry.get(), '-20', "La valeur -20 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -224,14 +224,14 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test first increment
-        self.assertEqual(interface_pi.listeMoteur3[0], 10,"Valeur de la commande du moteur 3 ne s'incrémente pas de 10")
+        self.assertEqual(interface_pi.listeMoteur3_[0], 10,"Valeur de la commande du moteur 3 ne s'incrémente pas de 10")
         self.assertEqual(interface_pi.moteur3Entry.get(), '10', "La valeur 10 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
         # Test second increment
         interface_pi.right3Button.event_generate("<Button-1>", when="tail")
         self.update_events()
-        self.assertEqual(interface_pi.listeMoteur3[0], 20,"Valeur de la commande du moteur 3 ne s'incrémente pas de 20")
+        self.assertEqual(interface_pi.listeMoteur3_[0], 20,"Valeur de la commande du moteur 3 ne s'incrémente pas de 20")
         self.assertEqual(interface_pi.moteur3Entry.get(), '20', "La valeur 20 du moteur 3 ne s'affiche pas dans son entry")
         self.update_events()
 
@@ -299,9 +299,9 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # First test : verify the update of the listeMoteur values
-        self.assertEqual(interface_pi.listeMoteur1[0], 100,"La valeur d'angle du moteur 1 dans la list des moteur ne vas pas à 100")
-        self.assertEqual(interface_pi.listeMoteur2[0], 200,"La valeur d'angle du moteur 2 dans la list des moteur ne vas pas à 200")
-        self.assertEqual(interface_pi.listeMoteur3[0], 300,"La valeur d'angle du moteur 3 dans la list des moteur ne vas pas à 300")
+        self.assertEqual(interface_pi.listeMoteur1_[0], 100,"La valeur d'angle du moteur 1 dans la list des moteur ne vas pas à 100")
+        self.assertEqual(interface_pi.listeMoteur2_[0], 200,"La valeur d'angle du moteur 2 dans la list des moteur ne vas pas à 200")
+        self.assertEqual(interface_pi.listeMoteur3_[0], 300,"La valeur d'angle du moteur 3 dans la list des moteur ne vas pas à 300")
         self.update_events()
 
         # Second test: verify the msg send to the OpenCr
@@ -326,9 +326,9 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # First test : verify if all values the angles values of the motors returned to 0
-        self.assertEqual(interface_pi.listeMoteur1[0], 0)
-        self.assertEqual(interface_pi.listeMoteur2[0], 0)
-        self.assertEqual(interface_pi.listeMoteur3[0], 0)
+        self.assertEqual(interface_pi.listeMoteur1_[0], 0)
+        self.assertEqual(interface_pi.listeMoteur2_[0], 0)
+        self.assertEqual(interface_pi.listeMoteur3_[0], 0)
 
         self.assertEqual(interface_pi.moteur1Entry.get(), '0')
         self.assertEqual(interface_pi.moteur2Entry.get(), '0')
@@ -347,7 +347,7 @@ class TestInterface(unittest.TestCase):
         self.update_events()
 
         # Test
-        self.assertEqual(interface_pi.instructionListe[0]," commande 1 007\n")
+        self.assertEqual(interface_pi.instructionListe_[0]," commande 1 007\n")
 
     def test_add_routine_list(self):
         #Setup the test
@@ -369,11 +369,11 @@ class TestInterface(unittest.TestCase):
         test_str_2 = " stop_cmd 5 701\n"
         self.update_events()
         interface_pi.routine.delete("1.0", END)
-        interface_pi.instructionListe = [test_str_1, test_str_2]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe_[0])
         self.update_events()
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe_[1])
         interface_pi.command = 2
         self.update_events()
 
@@ -398,11 +398,11 @@ class TestInterface(unittest.TestCase):
         test_str_2 = " start_cmd 3 819\n"
         self.update_events()
         interface_pi.routine.delete("1.0", END)
-        interface_pi.instructionListe = [test_str_1, test_str_2]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2]
 
-        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe_[0])
         self.update_events()
-        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe_[1])
         interface_pi.command = 1
         self.update_events()
 
@@ -427,14 +427,14 @@ class TestInterface(unittest.TestCase):
         test_str_3 = " gazon t 112\n"
 
         self.update_events()
-        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe_[0])
 
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe_[1])
         interface_pi.command = 2
 
-        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe_[2])
         self.update_events()
 
         interface_pi.butDelete.event_generate("<Button-1>", when="tail")
@@ -458,14 +458,14 @@ class TestInterface(unittest.TestCase):
 
         self.update_events()
         interface_pi.routine.delete("1.0", END)
-        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe_[0])
 
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe_[1])
         interface_pi.command = 2
 
-        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe_[2])
 
         interface_pi.instructEntry.insert(END, test_str_4)
         self.update_events()
@@ -485,11 +485,11 @@ class TestInterface(unittest.TestCase):
 
         self.update_events()
         interface_pi.routine.delete("1.0", END)
-        interface_pi.instructionListe = [test_str_1, test_str_2]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2]
 
-        interface_pi.routine.insert("1.0", interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", interface_pi.instructionListe_[0])
 
-        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", "x" + interface_pi.instructionListe_[1])
         interface_pi.command = 2
 
         self.update_events()
@@ -525,19 +525,19 @@ class TestInterface(unittest.TestCase):
         old_rx_line_len = len(rx_line)
 
         self.update_events()
-        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe_[0])
         interface_pi.command = 1
 
-        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe_[1])
 
-        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe_[2])
 
         self.update_events()
 
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
-        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv_, 100000000))
         t_test.start()
 
         # Run
@@ -552,21 +552,21 @@ class TestInterface(unittest.TestCase):
         interface_pi.loopRout.select()
         self.update_events()
 
-        interface_pi.instructionListe = [test_str_1, test_str_2, test_str_3]
+        interface_pi.instructionListe_ = [test_str_1, test_str_2, test_str_3]
 
-        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe[0])
+        interface_pi.routine.insert("1.0", "x" + interface_pi.instructionListe_[0])
         interface_pi.command = 1
 
-        interface_pi.routine.insert("2.0", interface_pi.instructionListe[1])
+        interface_pi.routine.insert("2.0", interface_pi.instructionListe_[1])
 
-        interface_pi.routine.insert("3.0", interface_pi.instructionListe[2])
+        interface_pi.routine.insert("3.0", interface_pi.instructionListe_[2])
 
         self.update_events()
         #print("rendu ici 1" )
         # ** First sequence **
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
-        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv_, 100000000))
         t_test.start()
 
         # Run
@@ -577,7 +577,7 @@ class TestInterface(unittest.TestCase):
         # ** Second sequence **
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
-        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv_, 100000000))
         t_test.start()
 
         # Run
@@ -590,7 +590,7 @@ class TestInterface(unittest.TestCase):
        # print("rendu ici 4")
         old_rx_line_len = len(rx_line)
         # This tests need to be run in another thread because the Tkinter cannot be in another thread itself
-        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv, 100000000))
+        t_test = Thread(target=self.t_thread_test_play_func, args=(interface_pi.routine_event_cv_, 100000000))
         t_test.start()
 
         # Run
@@ -606,20 +606,20 @@ class TestInterface(unittest.TestCase):
         self.assertEqual(rx_line[-1], "commande h 987\n")
 
         # Second Test
-       # with interface_pi.routine_event_cv:
+       # with interface_pi.routine_event_cv_:
         event_var.set()
 
         self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
         self.assertEqual(rx_line[-1], "start_cmd 3 654\n")
 
         # Third Test
-        #with interface_pi.routine_event_cv:
+        #with interface_pi.routine_event_cv_:
         event_var.set()
 
         self.assertTrue(TestInterface.wait_until_event_variable_to_set(event_var, tick_timeout))
         self.assertEqual(rx_line[-1], "gazon t 321\n")
 
-        #with interface_pi.routine_event_cv:
+        #with interface_pi.routine_event_cv_:
         event_var.set()
 
     # ======= Finger control finger =======
