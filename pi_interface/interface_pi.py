@@ -12,7 +12,7 @@ import time
 import serial
 
 # Set this variable to used the print instead of serial. Good to change the GUI and test
-test_mode = True
+test_mode = False
 if __name__ == '__main__':
     if test_mode:
         __name__ = "__test__"
@@ -21,6 +21,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     ser_write = serial.Serial("/dev/myOpenCR", 9600)
     ser_read = serial.Serial("/dev/myOpenCR", 9600)
+    print("OpenCr found over serial!")
 else:
     print(" Interface is imported: serial function will be overwritten")
     # Should not be called in test
@@ -71,6 +72,7 @@ routine_event_cv_ = Event()
 routine_event_cv_.set()
 send_lock_ = RLock()
 routine_cv_waiting_for_unlock_ = False
+ready_to_send_bloc_ = False
 
 is_play_thread_alive_ = False
 stop_flag_lock_ = RLock()
@@ -97,6 +99,8 @@ class Record:
     recorded_arm_value = [0, 0, 0, 0]
     rx_hand_cnt = 0
     rx_arm_cnt = 0
+    cnt_nolidge = 0
+    rx_nolidge = 0
 
 # Instance
 record = Record
@@ -427,20 +431,33 @@ def check_bloc():
 
 def send_bloc(cmd_list):
     """ Sends the input list over serial and waits for all nolidge """
-    cnt_nolidge =0
+    
+    record.cnt_nolidge =0
+    global ready_to_send_bloc_
+    
     
     for inst in cmd_list:
         cmd_buffer = inst.split()
         if cmd_buffer[0] == 'moveto':
-            cnt_nolidge += 1
+            record.cnt_nolidge += 1
+            ready_to_send_bloc_ = True
+            
         send(inst)
-
+    
+    routine_event_cv_.clear()
+    if routine_event_cv_.wait(5):  # Wait the nolidge flag or wait 10 seconds
+        print(" nolidge passe: " + str(ready_to_send_bloc_))
+    else:
+        print("Bloc timeout")
+        
+    ready_to_send_bloc_ = False
     # Wait for the same number of moveto and nolidge flag
-    for counter in range(0, cnt_nolidge):
-
-        routine_event_cv_.clear()
-        routine_event_cv_.wait(10)  # Wait the nolidge flag or wait 20 seconds
-
+##    for counter in range(0, cnt_nolidge):
+##        routine_event_cv_.clear()
+##        if routine_event_cv_.wait(10):  # Wait the nolidge flag or wait 20 seconds
+##            print(" nolidge passe: "+ str(cnt_nolidge))
+##        else:
+##            print("timeout")
 
 def Homing(event):
     """ Send the zero comand to the motor specified by the OptionMenu of index when the homing button is pressed"""
@@ -820,7 +837,8 @@ list_choiceHoming.set('all')
 def read():
     """ Reads the serial port and prints the result to the console. If the message "nolidg" is received, wake up routine"""
     global routine_event_cv_
-
+    global ready_to_send_bloc_
+    
     while threads_on_:
         cmd_read = ser_read.readline()
         cmd_read_decoded = cmd_read.decode('utf-8')
@@ -828,13 +846,23 @@ def read():
         print(cmd_read_decoded[:len(cmd_read_decoded)-2])
         
         if cmd_read_decoded[:len(cmd_read_decoded)-2] == 'nolidge':
-            try:
-                routine_event_cv_.set()
+            if ready_to_send_bloc_:
+                record.rx_nolidge +=1
+                print("on est rendu a :" + str(record.rx_nolidge) + "vs" + str(record.cnt_nolidge))
                 
-            except RuntimeError:
-                print("No waiting task")
-
-        read_record()   # Verify if the message is for the record thread
+                if record.rx_nolidge >= record.cnt_nolidge:
+                    record.rx_nolidge = 0
+                    routine_event_cv_.set()
+            elif not ready_to_send_bloc_:    
+                try:
+                    routine_event_cv_.set()
+                    print("Rentre pas ici")
+                except RuntimeError:
+                    print("No waiting task")
+        cmd_splitted = cmd_read_decoded[:len(cmd_read_decoded)-2].split()
+        
+        if len (cmd_splitted) >= 3:
+            read_record(cmd_splitted)   # Verify if the message is for the record thread
 
 
 def read_record(rx_string):
@@ -842,19 +870,25 @@ def read_record(rx_string):
     recorded_hand or recorded_arm value list"""
 
     if rx_string[0] == "recorded_hand" and not record.hand_event.isSet():
-        if rx_string[1] in range(0, NUMBER_OF_FINGERS):
-            record.recorded_hand_value[rx_string[1]] = rx_string[2]
+        if int(rx_string[1]) in range(1, NUMBER_OF_JOINTS+1):
+            record.recorded_hand_value[int(rx_string[1])] = int(rx_string[2])
             record.rx_hand_cnt += 1
 
     if rx_string[0] == "recorded_arm" and not record.arm_event.isSet():
-        if rx_string[1] in range(0, NUMBER_OF_JOINTS):
-            record.recorded_arm_value[rx_string[1]] = rx_string[2]
+        print("allo")
+        if int(rx_string[1]) in range(1, NUMBER_OF_JOINTS+1):
+            record.recorded_arm_value[int(rx_string[1])] = int(rx_string[2])
             record.rx_arm_cnt += 1
+            print("cnt" + str(record.rx_arm_cnt))
+            print(record.hand_event.isSet())
+            
+            
 
-    if not record.hand_event.isSet() and record.rx_arm_cnt >= NUMBER_OF_JOINTS:
+
+    if not record.hand_event.isSet() and record.rx_hand_cnt >= NUMBER_OF_JOINTS:
         record.hand_event.set()  # All record position are received
 
-    if not record.arm_event.isSet() and record.rx_hand_cnt >= NUMBER_OF_FINGERS:
+    if not record.arm_event.isSet() and record.rx_arm_cnt >= NUMBER_OF_FINGERS:
         record.arm_event.set()     # All record position are received
 
 
