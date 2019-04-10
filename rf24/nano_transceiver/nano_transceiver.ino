@@ -11,7 +11,7 @@
 #define INDEX_PIN A7
 #define MIDDLE_PIN A6
 #define NB_MESSAGE 3
-#define SIZE_MESSAGE_BUFFER 100
+#define SIZE_MESSAGE_BUFFER 50
 
 RF24 radio(7, 8); // CE, CSN
 
@@ -25,12 +25,12 @@ float filter_signal(float signal_to_filter);
 float old_finger_0 = 0;
 float old_finger_1 = 0;
 float old_finger_2 = 0;
-float offset_finger = 1.5;
+float offset_finger = 2;
 int fingerPins[3]={THUMB_PIN,INDEX_PIN,MIDDLE_PIN};
 int CalibrationVals[2][3];   
 
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(9600);
 
   pinMode(THUMB_PIN, INPUT);
   pinMode(INDEX_PIN, INPUT);
@@ -38,7 +38,7 @@ void setup() {
   CalibrateFlexSensors();
   radio.begin();
   radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MIN);  // Lowest power
+  radio.setPALevel(RF24_PA_MAX);  // Lowest power
   radio.stopListening();          // Setting in transmiting mode
   float old_finger_0 = analogRead(THUMB_PIN);
   float old_finger_1 = analogRead(INDEX_PIN);
@@ -129,6 +129,7 @@ void read_sensor(void)
   //Serial.println("THUMB_PIN: " + String(finger_0) + "\n");
   //finger_0 = filter_signal(finger_0, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_0 = map(finger_0, CalibrationVals[0][0], CalibrationVals[1][0], 0, 20);
+  finger_0 = constrain(finger_0, 0, 20);
   
   if(finger_0 < old_finger_0 + offset_finger && finger_0 > old_finger_0 - offset_finger){
     finger_0 = old_finger_0;
@@ -142,6 +143,7 @@ void read_sensor(void)
   //Serial.println("INDEX_PIN: " + String(finger_1) + "\n");
   //finger_1 = filter_signal(finger_1, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_1 = map(finger_1, CalibrationVals[0][1], CalibrationVals[1][1], 0, 20);
+  finger_1 = constrain(finger_1, 0, 20);
   
   if(finger_1 < old_finger_1 + offset_finger && finger_1 > old_finger_1 - offset_finger){
     finger_1 = old_finger_1;
@@ -154,6 +156,7 @@ void read_sensor(void)
   //Serial.println("MIDDLE_PIN: " + String(finger_2) + "\n");
   //finger_2 = filter_signal(finger_2, 5000);    //filtrage du signal RC a la freq specifiee 
   finger_2 = map(finger_2, CalibrationVals[0][2], CalibrationVals[1][2], 0, 20);
+  finger_2 = constrain(finger_2, 0, 20);
   
   if(finger_2 < old_finger_2 + offset_finger && finger_2 > old_finger_2 - offset_finger){
     finger_2 = old_finger_2;
