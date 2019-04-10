@@ -64,13 +64,14 @@ public:
 	float 	Sts_ActualVelocity;
 	bool 	Sts_Moving;
 	bool 	JMWatchdog;
-	bool 	Sts_Homed;
+	int 	Sts_Homed;
 	bool 	Sts_Homing;
     bool 	Sts_Enabled;
     float   Sts_GoalPosition;
 	bool    dontMoveBackward;
 	bool    dontMoveForward;
-	bool    switchMode;
+	bool    switchMin;
+	bool	switchMax;
 	int rotation_direction = 0;
 
 
@@ -101,7 +102,8 @@ public:
 	// **** Set Parameters Methods ****
     void setPermissionForward();
 	void setPermissionBackward();
-	void setSwitchMode(bool Mode);
+	void setSwitchMin(bool Mode);
+	void setSwitchMax(bool Mode);
 	//void setAtPosition(bool isReached);
 	//void setGoalPosition(float goalP);
 	void setMaxSoftlimit(String cmd);
@@ -120,10 +122,12 @@ public:
 	int getTorque();
 	int	getVelocity();
 	int getMovingStatus();
+	bool getJMWatchdog();
 	bool getPermissionForward();
 	bool getPermissionBackward();
-	bool getSwitchMode();
-
+	bool getSwitchMin();
+	bool getSwitchMax();
+	void ack_msg(void);
 
 	void readStatus();
 
@@ -141,7 +145,7 @@ private:
 	const char 		*log = NULL;
 	bool 			result = false;
 	float			HomeOffset = 0;
-
+	
 
 	// *******************************
 	// **** Convertion Methods ****

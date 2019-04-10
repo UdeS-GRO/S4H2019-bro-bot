@@ -3,7 +3,7 @@
 
 #include "WString.h"
 
-void dynamixel_command(String cmd[]);
+double dynamixel_command(String cmd[]);
 void split(String data, char separator, String* temp);
 
 #endif //P_MONITOR

@@ -49,7 +49,8 @@ Axis::Axis(uint8_t AxisID, uint32_t baud, int new_model, int MinSoft, int MaxSof
 	HomeOffset 	= 0;
 	dontMoveBackward  = 0 ;
 	dontMoveForward   = 0 ;
-	switchMode  = 0;
+	switchMin  = 0;
+	switchMax  = 0;
 	JMWatchdog = true;
 
 	torque_counter_filter = NULL;
@@ -109,6 +110,7 @@ Axis::~Axis()
 	delete torque_counter_filter;
 	delete moving_counter_filter;
 }
+
 
 
 // *****************************************************************************************************
@@ -196,13 +198,17 @@ void Axis::HomeRequest(bool *HomeSW)
 	}
 
 	Sts_Homing = 1;
-
+	//Serial.println(*HomeSW);
 	if(*HomeSW)
 	{
 		stopCmd();
-		if (Sts_Moving == 0)
+		switchMin = true;
+		//Serial.println("salut");
+		delay(100);
+		if (getMovingStatus() == 0)
         {
-			HomeOffset = 0 - Sts_ActualPosition;
+			Serial.println(ID);
+			HomeOffset = 0 - getPosition();
 			Sts_Homing = 0;
 			Sts_Homed = 1;
 			Serial.println(log);
@@ -243,32 +249,34 @@ void Axis::verifGoalAchieve()
     {
         if(rotation_direction > 0) // Verify direction of the motion
         {
-            if (Sts_ActualPosition >= (Sts_GoalPosition-2) || Sts_ActualPosition >= MaxSoftlimit)
+            if (getPosition() >= (Sts_GoalPosition-3) || getPosition() >= MaxSoftlimit)
             {
                 stopCmd();
                 JMWatchdog = 1;
 			Serial.println("Max soft limit :");
 			Serial.println(MaxSoftlimit);
 			Serial.println("VELOCITE");
-			Serial.println(Sts_ActualVelocity );
+			Serial.println(getVelocity());
 
-
+			ack_msg();
             }
         }
         else if (rotation_direction < 0)
         {
-            if (Sts_ActualPosition <= (Sts_GoalPosition+2) || Sts_ActualPosition <= MinSoftlimit)
+            if (getPosition() <= (Sts_GoalPosition+3) || getPosition() <= MinSoftlimit)
             {
                 stopCmd();
 			Serial.println("VELOCITE");
-			Serial.println(Sts_ActualVelocity );
+			Serial.println(getVelocity());
 
                 JMWatchdog = 1;
-			if(Sts_ActualPosition <= (Sts_GoalPosition+2)){
+			if(getPosition() <= (Sts_GoalPosition+3)){
 				Serial.println("arrive a goal pos");
 			}
-			if(Sts_ActualPosition <= MinSoftlimit) {
+			if(getPosition() <= MinSoftlimit) {
 				Serial.println("limite depass�");
+
+				ack_msg();
 			}
             }
         }
@@ -294,16 +302,16 @@ void Axis::Moveto(float goalpos)
         Sts_GoalPosition = goalpos;
         Serial.println(Sts_GoalPosition);
 
-        if(Sts_GoalPosition < Sts_ActualPosition)
+        if(Sts_GoalPosition < getPosition())
         {
             rotation_direction = -1;
-            moveAtSpeed("-50");
+            moveAtSpeed("-30");
             JMWatchdog = false;
         }
-        if(Sts_GoalPosition > Sts_ActualPosition)
+        if(Sts_GoalPosition > getPosition())
         {
             rotation_direction = 1;
-            moveAtSpeed("50");
+            moveAtSpeed("30");
             JMWatchdog = false;
         }
     }
@@ -326,9 +334,7 @@ void Axis::moveAtSpeed(String cmd)
 
     if (vitesse < 0)
 	{
-		dontMoveForward = 0;
-
-		if (dontMoveBackward)
+		if (switchMin)
 		{
 			Serial.println ("You can't move backward");
 			return;
@@ -338,9 +344,7 @@ void Axis::moveAtSpeed(String cmd)
 
 	if (vitesse > 0)
 	{
-		dontMoveBackward = 0;
-
-		if (dontMoveForward)
+		if (switchMax)
 		{
 			Serial.println("You can't move Forward");
 			return;
@@ -515,11 +519,15 @@ void Axis::setMovingFilter(float new_reference, float new_maxDifference, int new
 * @return Nothing.
 */
 
-void Axis::setSwitchMode(bool Mode)
+void Axis::setSwitchMin(bool Mode)
 {
-    switchMode = Mode;
+    switchMin = Mode;
 }
 
+void Axis::setSwitchMax(bool Mode)
+{
+	switchMax = Mode;
+}
 /**
 * Set the LED to blink or not. We use it to show when the motor is in teaching mode after the trigger of the torque_counter_filter
 *
@@ -608,6 +616,10 @@ int Axis::getPosition()
 	return Sts_ActualPosition;
 }
 
+bool Axis::getJMWatchdog()
+{
+	return JMWatchdog;
+}
 
 /**
 * Get the actual current of the motor. Used with the torque control of the 350 model
@@ -775,24 +787,39 @@ bool Axis::getPermissionBackward()
 * @return if it can or not move stop the motor in limitSwitch fonction of OpenCR (1 = CAN'T)
 */
 
-bool Axis::getSwitchMode()
+bool Axis::getSwitchMin()
 {
     if (debugMode == 1)
         {
-            if(switchMode)
+            if(switchMin)
             {
-                Serial.println("switchMode is on");
+                Serial.println("switchMin is on");
             }
 
             else
             {
-                Serial.println("switchMode is off");
+                Serial.println("switchMin is off");
             }
         }
-    return switchMode;
+    return switchMin;
 }
 
+bool Axis::getSwitchMax()
+{
+	if (debugMode == 1)
+	{
+		if (switchMax)
+		{
+			Serial.println("switchMax is on");
+		}
 
+		else
+		{
+			Serial.println("switchMax is off");
+		}
+	}
+	return switchMax;
+}
 // **************** Read/Write Register Methods ****************
 
 
@@ -894,4 +921,16 @@ float Axis::convertValue2Angle(int value)
 int Axis::convertAngle2Value(float angle)
 {
     return (angle*4095/360);
+}
+
+
+/**
+* This function print "nolidge" to acknowledge when something is tested and works.
+*
+* @param Nothin
+* @return Nothing.
+*/
+void Axis::ack_msg(void)
+{
+	Serial.println("nolidge");
 }

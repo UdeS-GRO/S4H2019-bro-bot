@@ -20,8 +20,8 @@
 //Constant declarations and definitions
 #define TORQUE_COUNTER_REFERENCE  0
 #define TORQUE_MAX_DIFFERENCE     40
-#define TORQUE_CNT_BEFORE_TRIGGER 150
-#define MOVING_CNT_BEFORE_TRIGGER 150
+#define TORQUE_CNT_BEFORE_TRIGGER 100
+#define MOVING_CNT_BEFORE_TRIGGER 100
 #define NUMBER_OF_AXIS            4   //+ 1 because there is no axis 0
 #define NUMBER_OF_FINGERS         3
 
@@ -38,12 +38,12 @@ Axis *Axis_table[NUMBER_OF_AXIS];
 
 
 // Hard Limit Switches inputs declaration
-int inMinLS01 = 8;
-int inMaxLS01 = 9;
-int inMinLS02 = 10;
-int inMaxLS02 = 11;
-int inMinLS03 = 12;
-int inMaxLS03 = 13;
+int inMinLS01 = 5;
+int inMaxLS01 = 6;
+int inMinLS02 = 7;
+int inMaxLS02 = 8;
+int inMinLS03 = 9;
+int inMaxLS03 = 10;
 
 // Limit Switches input status
 bool MinLS[NUMBER_OF_AXIS];
@@ -83,8 +83,9 @@ void setup()
     /*Init for the torque control*/
     Axis_table[1]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[1]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
-
-    Axis_table[2]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
+//test JM
+    
+    Axis_table[2]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE+30,TORQUE_CNT_BEFORE_TRIGGER);  
     Axis_table[2]->setMovingFilter(0, 0,MOVING_CNT_BEFORE_TRIGGER);
     
     Axis_table[3]->setTorqueFilter(TORQUE_COUNTER_REFERENCE,TORQUE_MAX_DIFFERENCE,TORQUE_CNT_BEFORE_TRIGGER);  
@@ -107,15 +108,15 @@ void loop()
   short axis_index;
 
   // update all the status of the motors
-  Axis_table[1]->readStatus();
+  /*Axis_table[1]->readStatus();
   Axis_table[2]->readStatus();
-  Axis_table[3]->readStatus();
+  Axis_table[3]->readStatus();*/
     
   // Limits Switch digital Read
-  //limitSwitch();           
+  limitSwitch();                          //test JM      
   
   //Read message
-  read_serial();
+  read_serial();                          //test JM
   
   glove_check();
   
@@ -124,13 +125,13 @@ void loop()
   // Torque control and verif if goal achieve of the moveTo
   for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
-    Axis_table[axis_index]->verifGoalAchieve(); // faire un mode debug
+    Axis_table[axis_index]->verifGoalAchieve(); // faire un mode debug      //test JM
     torque_control(Axis_table[axis_index]);
   }
 
   // Finger control
   int finger_index;
-  for (finger_index =1; finger_index <= NUMBER_OF_FINGERS; finger_index++)
+  for (finger_index =1; finger_index <= NUMBER_OF_FINGERS; finger_index++)    //test jm
   {
     finger_control(finger_index);
   }
@@ -166,7 +167,6 @@ void torque_control(Axis * axis)
     float present_load_f = (float)present_load;     //Convert to float
     float present_moving = (float)(1-axis->getMovingStatus());
     bool triggered =false;
-  
     if(axis->isFreeToMove == false)
     {
       /*Verify if something tries to force against the motor */
@@ -248,7 +248,7 @@ void read_serial(void)
        
          if(cmd[0] == "zero")       // Homing
          {
-            axis->HomeRequest(&MinLS[1]);
+            axis->HomeRequest(&MinLS[ID]);
          }
          
         else if(cmd[0] == "speed")  //  send a velocity to the motor
@@ -300,6 +300,7 @@ void read_serial(void)
         else if (cmd[0] == "torque_control_enable") // to use the torque control mode
         {
           axis->torqueControlEnable = true;
+          Serial.println(String( "Torque control enable: " + String(ID))); 
         }
         else if (cmd[0] == "torque_control_disable") // ignore the torque control mode
         {
@@ -317,6 +318,43 @@ void read_serial(void)
       {
         /* Read the PWM value from gui for a specific finger */
         hand_control->setFingerGuiValue(cmd[1].toInt(),cmd[2].toInt());
+        
+      }
+            else if (cmd[0] == "stop")
+      {
+        short axis_index;
+         // Set the motor velocity to 0 and indicates that it has reach is position
+        for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+        {
+          Axis_table[axis_index]->stopCmd();
+        } 
+      }
+      else if (cmd[0] == "record_arm")
+      {
+        int value_to_send = 0;
+        String str_to_send = "";
+        short axis_index;     
+           
+        for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
+        {
+            str_to_send = String("recorded_arm " + String(axis_index));
+            value_to_send = Axis_table[axis_index]->getPosition();
+            Serial.println(String(str_to_send + " " + String(value_to_send)));
+        }
+      }
+      else if (cmd[0] == "record_hand")
+      {
+        int value_to_send = 0;
+        String str_to_send = "";
+        short axis_index;     
+           
+        for (axis_index =1; axis_index <= NUMBER_OF_FINGERS ; axis_index++)
+        {
+              // Add the read of servo 
+//            str_to_send = String("recorded_hand " + String(axis_index));
+//            value_to_send = Axis_table[axis_index]->getPosition();
+//            Serial.println(String(str_to_send + " " + String(value_to_send)));
+        }  
       }
   }
 }
@@ -372,16 +410,7 @@ void change_finger_control_mode(String new_mode)
     dynamixel_command(cmd_tx);
 }*/
 
-/**
-* This function print "nolidge" to acknowledge when something is tested and works.
-* 
-* @param Nothin
-* @return Nothing.
-*/
-void ack_msg(void)
-{
-  Serial.println("nolidge");
-}
+
 
 /**
 * This function control the finger depending of the mode it is in. If it's in Glove mode, the command are coming from the Glove by instance
@@ -430,39 +459,51 @@ void limitSwitch(void)
   // Limits Switch digital Read
   MinLS[1] = digitalRead(inMinLS01);
   MinLS[2] = digitalRead(inMinLS02);
-  //MinLS[3] = digitalRead(inMinLS03);
+  MinLS[3] = digitalRead(inMinLS03);
   MaxLS[1] = digitalRead(inMaxLS01);
   MaxLS[2] = digitalRead(inMaxLS02);
-  //MaxLS[3] = digitalRead(inMaxLS03); */ // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
+  MaxLS[3] = digitalRead(inMaxLS03);  // decommenter lorsque les pins seront utilises. Sinon ce sont des valeurs randoms qui sont donnes
   // stoping by limit switch
   
 int axis_index;
 
-for (axis_index =1; axis_index < NUMBER_OF_AXIS-1 ; axis_index++)      // ENLEVER LE -1 LORSQU'ELLES SERONT TOUS CONNECTÉS
+for (axis_index =1; axis_index < NUMBER_OF_AXIS ; axis_index++)
   {
-    if(Axis_table[axis_index]->getSwitchMode())
+    if(Axis_table[axis_index]->getSwitchMin() || Axis_table[axis_index]->getSwitchMax())
     {
-        if(!MinLS[axis_index] && !MaxLS[axis_index])
+        if(!MinLS[axis_index])
         {
-          Axis_table[axis_index]->setSwitchMode(false);
+          Axis_table[axis_index]->setSwitchMin(false);
+        }
+        if(!MaxLS[axis_index])
+        {
+          Axis_table[axis_index]->setSwitchMax(false);
         }
     }
-    else if(!Axis_table[axis_index]->getSwitchMode()) // à changer avec le SwitchMode dans axis.cpp
+    else if((!Axis_table[axis_index]->getSwitchMin())&&(!Axis_table[axis_index]->getSwitchMax())) // à changer avec le SwitchMode dans axis.cpp
     {
-      if (MinLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0 || MaxLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0)
+      if ((MinLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0 ) || (MaxLS[axis_index] && Axis_table[axis_index]->Sts_Homing == 0))
       {
-        stopBySwitch(Axis_table[axis_index]);
         
+        //stopBySwitch(Axis_table[axis_index]);
+        Axis_table[axis_index]->Disable();
+        if(Axis_table[axis_index]->getJMWatchdog())
+        {
+          Axis_table[axis_index]->ack_msg();
+        }
+             
         if (MinLS[axis_index])
           {
             Serial.print("switch MIN ");
-            Serial.println(axis_index);        
+            Serial.println(axis_index);
+            Axis_table[axis_index]->setSwitchMin(true);        
             Axis_table[axis_index]->setPermissionBackward();
           }
         else if (MaxLS[axis_index])
           {
            Serial.print("switch MAX ");
            Serial.println(axis_index);
+           Axis_table[axis_index]->setSwitchMax(true);  
            Axis_table[axis_index]->setPermissionForward();
           }
         else 
@@ -470,6 +511,10 @@ for (axis_index =1; axis_index < NUMBER_OF_AXIS-1 ; axis_index++)      // ENLEVE
             Serial.println("WHAAT IS HAPPENING HERE");
           }
       }
+     else if (Axis_table[axis_index]->Sts_Homing == 1)
+     {
+       Axis_table[axis_index]->HomeRequest(&MinLS[axis_index]);
+     }
     }
 
 // Juste pour faire des tests
@@ -530,12 +575,12 @@ void split(String data, char separator, String* temp)
 * @return Nothing.
 */
 void glove_check(void){
-  if(hand_control->getMode()==GLOVE){
-    if(radio.available()){
-      hand_control->read_radio();
-    }
-  }
-  if(hand_control->getMode()!=FREE){
-    hand_control->attachMotor();
-  }
+//  if(hand_control->getMode()==GLOVE){
+//    if(radio.available()){
+//      hand_control->read_radio();
+//    }
+//  }
+//  if(hand_control->getMode()!=FREE){
+//    hand_control->attachMotor();
+//  }
 }
