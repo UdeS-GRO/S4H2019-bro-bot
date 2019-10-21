@@ -15,5 +15,5 @@ We are at Université de Sherbrooke in the robotic engineering program. The team
 
 
 ## Start the project 
-All materials to acquired and all the necessary softwares to download can be found in this Github wiki in the section **Getting started!!**
+All materials to be acquired and all the necessary softwares to download can be found in this Github wiki in the section **Getting started!!**
 
